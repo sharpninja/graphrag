@@ -1,52 +1,236 @@
-/* GraphRAG Search App — matches Python Streamlit UI styling */
+/* GraphRAG Search App — matches Python Streamlit UI structure */
 html, body {
-    font-family: 'Roboto', sans-serif;
+    font-family: 'Source Sans Pro', 'Roboto', sans-serif;
+    margin: 0;
+    padding: 0;
+    color: #262730;
+    background: #ffffff;
 }
 
-/* Tab bar — red active/inactive matching Python TabBar */
-.graphrag-tabs .mud-tab.mud-tab-active {
-    color: #ff4b4b !important;
+/* ── App layout: sidebar + main ── matches Streamlit shell */
+.st-app {
+    display: flex;
+    min-height: 100vh;
 }
 
-.graphrag-tabs .mud-tab {
-    color: #fc9e9e;
+/* ── Sidebar ── matches Streamlit [data-testid="stSidebar"] */
+.st-sidebar {
+    width: 300px;
+    min-width: 300px;
+    max-width: 300px;
+    background-color: #f0f2f6;
+    border-right: 1px solid #e0e0e0;
+    padding: 1rem;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+.st-sidebar-content {
+    padding: 0;
+}
+
+.st-sidebar-heading {
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #262730;
+}
+
+.st-divider {
+    border: none;
+    border-top: 1px solid #d6d6d6;
+    margin: 12px 0;
+}
+
+/* ── Main content ── matches Streamlit main area */
+.st-main {
+    flex: 1;
+    padding: 2rem 3rem;
+    overflow-y: auto;
+}
+
+/* ── Headings ── match Streamlit markdown headings */
+.st-main h4 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+}
+
+.st-main h5 {
+    font-size: 1.17rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+}
+
+.st-main h6 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+}
+
+/* ── Button ── matches Streamlit st.button */
+.st-button {
+    border: 1px solid #d6d6d6;
+    background: #ffffff;
+    color: #262730;
+    padding: 0.4rem 0.8rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.st-button:hover {
+    border-color: #ff4b4b;
+    color: #ff4b4b;
+}
+
+.st-button--primary {
+    background: #ff4b4b;
+    color: #ffffff;
+    border-color: #ff4b4b;
+}
+
+.st-button--primary:hover {
+    background: #e04343;
+    border-color: #e04343;
+    color: #ffffff;
+}
+
+.st-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ── Text input ── matches Streamlit st.text_input */
+.st-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 400;
+    margin-bottom: 4px;
+    color: #555;
+}
+
+.st-text-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d6d6d6;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.st-text-input:focus {
+    outline: none;
+    border-color: #ff4b4b;
+    box-shadow: 0 0 0 1px #ff4b4b;
+}
+
+/* ── Tabs ── matches Python TabBar MUI-style */
+.st-tabs {
+    display: flex;
+    border-bottom: 2px solid #e0e0e0;
+    margin-bottom: 16px;
+    gap: 0;
+}
+
+.st-tab {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 8px 16px;
+    font-size: 0.9375rem;
     font-weight: 500;
+    cursor: pointer;
+    color: #fc9e9e;
+    font-family: inherit;
+    margin-bottom: -2px;
+    transition: color 0.15s, border-color 0.15s;
 }
 
-.graphrag-tabs .mud-tabs-toolbar {
-    border-bottom: 1px solid #eee;
+.st-tab:hover {
+    color: #ff4b4b;
 }
 
-.graphrag-tabs .mud-tab-slider {
-    background-color: #ff4b4b !important;
+.st-tab--active {
+    color: #ff4b4b;
+    border-bottom-color: #ff4b4b;
 }
 
-/* Question table — matches Python dataframe appearance */
-.question-table {
-    max-width: 100%;
+/* ── Columns ── matches Python st.columns() */
+.st-columns {
+    display: flex;
+    gap: 16px;
 }
 
-.question-table thead th {
+.st-column {
+    flex: 1;
+    min-width: 0;
+}
+
+/* ── Dataframe ── matches Streamlit st.dataframe appearance */
+.st-dataframe-container {
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.st-dataframe {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.st-dataframe thead th {
     background-color: #fafafa;
     font-weight: 500;
-    font-size: 0.875rem;
     color: #666;
+    padding: 6px 8px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
 }
 
-.question-table tbody tr:hover {
+.st-dataframe tbody td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.st-dataframe-row {
+    cursor: pointer;
+}
+
+.st-dataframe-row:hover {
     background-color: #f5f5f5;
 }
 
-/* Search result columns */
-.search-result-column {
-    padding: 8px 12px;
+.st-row--selected {
+    background-color: #fff3f3 !important;
 }
 
-/* Citation table — matches Python render_html_table() exactly */
+/* ── Alert ── matches Streamlit error */
+.st-alert--error {
+    background-color: #fde8e8;
+    border: 1px solid #ff4b4b;
+    color: #7d1a1a;
+    padding: 0.75rem 1rem;
+    border-radius: 0.25rem;
+    margin-bottom: 12px;
+}
+
+/* ── Search result columns ── */
+.search-result-column {
+    padding: 8px 0;
+}
+
+/* ── Citation table ── matches Python render_html_table() exactly */
 .citation-table-container {
     max-width: 100%;
     overflow: hidden;
-    margin: 0 auto;
+    margin: 0 auto 12px;
 }
 
 .citation-table {
@@ -70,29 +254,7 @@ html, body {
     font-weight: 600;
 }
 
-/* Report list table */
-.report-list-table thead th {
-    background-color: #fafafa;
-    font-weight: 500;
-    font-size: 0.875rem;
-    color: #666;
-}
-
-.report-list-table tbody tr:hover {
-    background-color: #f5f5f5;
-}
-
-/* Selected item in community report list */
-.mud-selected-item {
-    background-color: #fff3f3 !important;
-}
-
-/* Cursor pointer helper */
-.cursor-pointer {
-    cursor: pointer;
-}
-
-/* Markdown content */
+/* ── Markdown content ── */
 .markdown-content h1,
 .markdown-content h2,
 .markdown-content h3 {
@@ -110,14 +272,14 @@ html, body {
 }
 
 .markdown-content code {
-    background-color: var(--mud-palette-background-gray);
+    background-color: #f0f2f6;
     padding: 2px 4px;
     border-radius: 3px;
     font-size: 0.9em;
 }
 
 .markdown-content pre {
-    background-color: var(--mud-palette-background-gray);
+    background-color: #f0f2f6;
     padding: 12px;
     border-radius: 4px;
     overflow-x: auto;

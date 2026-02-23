@@ -1,8 +1,8 @@
 @inject MarkdownRenderer Renderer
 
 <div class="search-result-column">
-    <MudText Typo="Typo.h5" Class="mb-1">GraphRAG: @GetSearchTitle()</MudText>
-    <MudText Typo="Typo.caption" Class="mb-3" Style="color: #888;">@GetContextCaption()</MudText>
+    <h5>GraphRAG: @GetSearchTitle()</h5>
+    <h6 style="color: #888;">@GetContextCaption()</h6>
 
     <div class="markdown-content">
         @MarkdownRenderer.RenderToHtml(Result.Response)

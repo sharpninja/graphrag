@@ -15,16 +15,6 @@ public partial class MainLayout
         PaletteLight = new PaletteLight
         {
             Primary = "#ff4b4b",
-            AppbarBackground = "#ffffff",
-            AppbarText = "#424242",
-            DrawerBackground = "#ffffff",
         },
     };
-
-    private bool _drawerOpen = true;
-
-    private void ToggleDrawer()
-    {
-        _drawerOpen = !_drawerOpen;
-    }
 }

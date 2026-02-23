@@ -35,7 +35,9 @@ public static class PromptResources
         }
 
         // Fall back to file path (useful for development/customization)
-        var assemblyDir = Path.GetDirectoryName(ResourceAssembly.Location) ?? ".";
+        var assemblyDir = Path.GetDirectoryName(ResourceAssembly.Location) is { Length: > 0 } loc
+            ? loc
+            : AppContext.BaseDirectory;
         var filePath = Path.Combine(assemblyDir, "Prompts", $"{promptName}.txt");
         if (File.Exists(filePath))
         {

@@ -1,16 +1,14 @@
-@* Citation table component — matches Python render_html_table() styling *@
+@* Citation table — matches Python display_citations() / render_html_table() *@
 
 @if (_sections.Count > 0)
 {
-    <MudDivider Class="my-3" />
-    <MudText Typo="Typo.h6" Class="mb-2">Citations</MudText>
+    <hr />
+    <h6>Citations</h6>
 
     @foreach (var citationGroup in _sections)
     {
-        <MudText Typo="Typo.body2" Class="mb-1">
-            <b>@citationGroup.Label (@citationGroup.Items.Count):</b>
-        </MudText>
-        <div class="citation-table-container mb-3">
+        <p><strong>@citationGroup.Label (@citationGroup.Items.Count):</strong></p>
+        <div class="citation-table-container">
             <table class="citation-table">
                 <thead>
                     <tr>

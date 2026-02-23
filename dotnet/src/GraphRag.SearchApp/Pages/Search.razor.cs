@@ -3,6 +3,7 @@
 
 using GraphRag.DataModel;
 using GraphRag.SearchApp.Models;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 
 namespace GraphRag.SearchApp.Pages;
@@ -10,16 +11,24 @@ namespace GraphRag.SearchApp.Pages;
 /// <summary>
 /// Code-behind for the main Search page (includes tab-based Community Explorer).
 /// </summary>
-public partial class Search
+public partial class Search : IDisposable
 {
     private int _activeTab;
     private bool _isSuggesting;
     private List<SearchType> _activeSearchTypes = [];
 
     /// <inheritdoc />
-    protected override void OnInitialized()
+    public void Dispose()
     {
-        LoadReports();
+        AppState.PropertyChanged -= OnAppStateChanged;
+        GC.SuppressFinalize(this);
+    }
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        AppState.PropertyChanged += OnAppStateChanged;
+        await LoadDatasetsAsync().ConfigureAwait(false);
     }
 
     private static string GetSearchTypeLabel(SearchType type) => type switch
@@ -31,15 +40,70 @@ public partial class Search
         _ => type.ToString(),
     };
 
-    private int GetColumnWidth()
+    private async Task LoadDatasetsAsync()
     {
-        var count = SearchVm.Results.Count;
-        if (count == 0)
+        var datasets = await Loader.LoadDatasetListingAsync().ConfigureAwait(false);
+        AppState.Datasets.Clear();
+        foreach (var ds in datasets)
         {
-            return 12;
+            AppState.Datasets.Add(ds);
         }
 
-        return 12 / count;
+        if (AppState.Datasets.Count > 0 && string.IsNullOrEmpty(AppState.DatasetKey))
+        {
+            AppState.DatasetKey = AppState.Datasets[0].Key;
+        }
+    }
+
+    private async void OnAppStateChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(AppState.DatasetKey))
+        {
+            await LoadDatasetAsync().ConfigureAwait(false);
+            await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+        }
+    }
+
+    private async Task LoadDatasetAsync()
+    {
+        var ds = AppState.Datasets.FirstOrDefault(d => d.Key == AppState.DatasetKey);
+        if (ds is null)
+        {
+            return;
+        }
+
+        AppState.DatasetConfig = ds;
+        AppState.IsLoading = true;
+
+        try
+        {
+            var datasource = Loader.CreateDatasource(ds);
+            AppState.KnowledgeModel = await ModelService.LoadModelAsync(datasource).ConfigureAwait(false);
+            LoadReports();
+        }
+        catch (Exception ex)
+        {
+            SearchVm.SearchError = $"Failed to load dataset: {ex.Message}";
+        }
+        finally
+        {
+            AppState.IsLoading = false;
+        }
+    }
+
+    private void SetActiveTab(int tab)
+    {
+        _activeTab = tab;
+    }
+
+    private void OnQuestionInput(ChangeEventArgs e)
+    {
+        AppState.Question = e.Value?.ToString() ?? string.Empty;
+    }
+
+    private int GetEnabledCount()
+    {
+        return AppState.GetEnabledSearchTypes().Count;
     }
 
     private async Task OnSearchKeyUp(KeyboardEventArgs args)

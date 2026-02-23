@@ -4,6 +4,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>GraphRag</RootNamespace>
     <AssemblyName>graphrag</AssemblyName>
+    <NoWarn>$(NoWarn);IL3000</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

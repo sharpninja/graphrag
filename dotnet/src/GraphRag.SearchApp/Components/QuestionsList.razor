@@ -1,16 +1,17 @@
-<MudPaper Class="pa-3 mb-4" Elevation="0">
-    <MudText Typo="Typo.subtitle2" Class="mb-2">Suggested Questions</MudText>
-    <MudChipSet T="string" ReadOnly="false">
-        @foreach (var question in Questions)
-        {
-            <MudChip T="string" Color="Color.Default"
-                     Variant="Variant.Outlined"
-                     OnClick="() => OnQuestionClicked.InvokeAsync(question)">
-                @question
-            </MudChip>
-        }
-    </MudChipSet>
-</MudPaper>
+@* Questions list — matches Python create_questions_list_ui() st.dataframe *@
+<div class="st-dataframe-container" style="margin-bottom: 12px;">
+    <table class="st-dataframe">
+        <thead><tr><th>question</th></tr></thead>
+        <tbody>
+            @foreach (var question in Questions)
+            {
+                <tr class="st-dataframe-row" @onclick="() => OnQuestionClicked.InvokeAsync(question)">
+                    <td>@question</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
 
 @code {
     /// <summary>

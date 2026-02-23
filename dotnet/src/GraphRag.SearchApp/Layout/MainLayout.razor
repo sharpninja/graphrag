@@ -5,21 +5,4 @@
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-<MudLayout>
-    <MudAppBar Elevation="1">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu"
-                       Color="Color.Inherit"
-                       Edge="Edge.Start"
-                       OnClick="ToggleDrawer" />
-        <MudText Typo="Typo.h5" Class="ml-3">GraphRAG</MudText>
-        <MudSpacer />
-    </MudAppBar>
-
-    <MudDrawer @bind-Open="_drawerOpen" Elevation="2" Variant="DrawerVariant.Mini">
-        <Sidebar />
-    </MudDrawer>
-
-    <MudMainContent Class="pa-4">
-        @Body
-    </MudMainContent>
-</MudLayout>
+@Body

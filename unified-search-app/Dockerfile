@@ -14,6 +14,13 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="${PATH}:/root/.local/bin"
 RUN uv sync --no-install-project
 
+# Ensure entrypoint has correct line endings and permissions
+RUN sed -i 's/\r$//' docker-entrypoint.sh && chmod +x docker-entrypoint.sh
+
+# Default data directory
+ENV DATA_ROOT=/data
+RUN mkdir -p /data
+
 # Run application
 EXPOSE 8501
-ENTRYPOINT ["uv","run","poe","start_prod"]
+ENTRYPOINT ["./docker-entrypoint.sh"]

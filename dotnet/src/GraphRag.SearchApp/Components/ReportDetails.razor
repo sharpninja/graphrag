@@ -1,27 +1,23 @@
 @inject MarkdownRenderer Renderer
 
-<MudPaper Class="pa-4" Elevation="1" Style="height: 1000px; overflow-y: auto;">
-    <MudText Typo="Typo.h5" Class="mb-3">Selected Report</MudText>
-
-    <MudText Typo="Typo.h4" Class="mb-2">@Report.Title</MudText>
+<div style="height: 1000px; overflow-y: auto;">
+    <h4>@Report.Title</h4>
 
     @if (!string.IsNullOrEmpty(Report.Summary))
     {
-        <MudText Typo="Typo.body1" Class="mb-4">@Report.Summary</MudText>
+        <p>@Report.Summary</p>
     }
 
     @if (Report.Rank.HasValue)
     {
-        <MudText Typo="Typo.body2" Class="mb-4">
-            <b>Priority:</b> @Report.Rank.Value.ToString("F1")
-        </MudText>
+        <p><strong>Priority: @Report.Rank.Value.ToString("F1")</strong></p>
     }
 
     @if (!string.IsNullOrEmpty(Report.FullContent))
     {
-        <MudText Typo="Typo.h5" Class="mb-2">Key Findings</MudText>
+        <h5>Key Findings</h5>
         <div class="markdown-content">
             @MarkdownRenderer.RenderToHtml(Report.FullContent)
         </div>
     }
-</MudPaper>
+</div>

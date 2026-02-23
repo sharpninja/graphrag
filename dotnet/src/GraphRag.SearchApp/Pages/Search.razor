@@ -5,156 +5,177 @@
 @inject CommunityExplorerViewModel ExplorerVm
 @inject SearchOrchestrator Orchestrator
 @inject MarkdownRenderer Renderer
+@inject DatasetLoader Loader
+@inject KnowledgeModelService ModelService
 
 <PageTitle>GraphRAG Search</PageTitle>
 
-@* Dataset Header *@
-@if (AppState.DatasetConfig is not null)
-{
-    <MudText Typo="Typo.h4" Class="mb-1">GraphRAG: @AppState.DatasetConfig.Name</MudText>
-    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">@AppState.DatasetConfig.Description</MudText>
-}
+@* ── Page layout: sidebar + main ── matches Python st.sidebar + main content *@
+<div class="st-app">
+    <aside class="st-sidebar" data-testid="stSidebar">
+        <Sidebar />
+    </aside>
 
-@* Tab Bar — matches Python TabBar with red styling *@
-<MudTabs @bind-ActivePanelIndex="_activeTab"
-         Elevation="0"
-         Rounded="true"
-         ApplyEffectsToContainer="true"
-         Class="mb-4 graphrag-tabs">
-    <MudTabPanel Text="Search">
-        @* Question Suggestion Section *@
-        <div class="d-flex align-center mb-3 mt-2">
-            <MudButton Variant="Variant.Filled"
-                       Color="Color.Primary"
-                       OnClick="SuggestQuestions"
-                       Disabled="@_isSuggesting"
-                       Size="Size.Small">
+    <section class="st-main">
+        @* ── Heading block ── matches Python home_page.py lines 26-30 *@
+        <h4>GraphRAG: A Novel Knowledge Graph-based Approach to Retrieval Augmented Generation (RAG)</h4>
+        @if (AppState.DatasetConfig is not null)
+        {
+            <h5>Dataset selected: @AppState.DatasetConfig.Name</h5>
+            <p>@AppState.DatasetConfig.Description</p>
+        }
+
+        @* ── Suggest questions button ── matches Python st.button("Suggest some questions") *@
+        <div style="margin-bottom: 12px;">
+            <button class="st-button st-button--primary" @onclick="SuggestQuestions" disabled="@_isSuggesting">
                 @if (_isSuggesting)
                 {
-                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
-                }
-                Suggest some questions
-            </MudButton>
-            @if (AppState.GeneratedQuestions.Count > 0)
-            {
-                <MudButton Variant="Variant.Text"
-                           Color="Color.Default"
-                           OnClick="ResetQuestions"
-                           Size="Size.Small"
-                           Class="ml-2">
-                    Reset
-                </MudButton>
-            }
-        </div>
-
-        @* Generated Questions — selectable list *@
-        @if (AppState.GeneratedQuestions.Count > 0)
-        {
-            <MudSimpleTable Dense="true" Hover="true" Bordered="false" Class="mb-4 question-table">
-                <thead>
-                    <tr><th>question</th></tr>
-                </thead>
-                <tbody>
-                    @foreach (var q in AppState.GeneratedQuestions)
-                    {
-                        <tr class="cursor-pointer" @onclick="() => OnQuestionSelected(q)">
-                            <td>@q</td>
-                        </tr>
-                    }
-                </tbody>
-            </MudSimpleTable>
-        }
-
-        @* Search Input — no button, Enter triggers search *@
-        <MudTextField @bind-Value="AppState.Question"
-                      Label="Ask a question to compare the results"
-                      Variant="Variant.Outlined"
-                      Adornment="Adornment.Start"
-                      AdornmentIcon="@Icons.Material.Filled.Search"
-                      OnKeyUp="OnSearchKeyUp"
-                      FullWidth="true"
-                      Class="mb-4" />
-
-        @* Error Alert *@
-        @if (!string.IsNullOrEmpty(SearchVm.SearchError))
-        {
-            <MudAlert Severity="Severity.Error" Class="mb-4">@SearchVm.SearchError</MudAlert>
-        }
-
-        @* Per-search-type loading spinners *@
-        @if (SearchVm.IsSearching)
-        {
-            <div class="mb-4">
-                @foreach (var st in _activeSearchTypes)
-                {
-                    <div class="d-flex align-center mb-1">
-                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
-                        <MudText Typo="Typo.body2">Generating answer using @GetSearchTypeLabel(st)...</MudText>
-                    </div>
-                }
-            </div>
-        }
-
-        @* Results — equal-width columns *@
-        @if (SearchVm.Results.Count > 0)
-        {
-            <MudGrid>
-                @foreach (var result in SearchVm.Results)
-                {
-                    <MudItem xs="@GetColumnWidth()">
-                        <SearchResultPanel Result="result" />
-                    </MudItem>
-                }
-            </MudGrid>
-        }
-    </MudTabPanel>
-
-    <MudTabPanel Text="Community Explorer">
-        <MudGrid Class="mt-2">
-            <MudItem xs="12" md="4">
-                <MudPaper Class="pa-4" Elevation="1" Style="height: 1000px; overflow-y: auto;">
-                    <MudText Typo="Typo.h5" Class="mb-3">Community Reports</MudText>
-
-                    <MudSimpleTable Dense="true" Hover="true" Bordered="false" Class="report-list-table">
-                        <thead>
-                            <tr>
-                                <th>human_readable_id</th>
-                                <th>title</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var report in ExplorerVm.Reports)
-                            {
-                                <tr class="cursor-pointer @(report == ExplorerVm.SelectedReport ? "mud-selected-item" : string.Empty)"
-                                    @onclick="() => OnReportSelected(report)">
-                                    <td>@(report.ShortId ?? report.CommunityId)</td>
-                                    <td>@report.Title</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </MudSimpleTable>
-
-                    @if (ExplorerVm.Reports.Count == 0)
-                    {
-                        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-4">
-                            No community reports loaded. Select a dataset from the sidebar.
-                        </MudText>
-                    }
-                </MudPaper>
-            </MudItem>
-
-            <MudItem xs="12" md="8">
-                @if (ExplorerVm.SelectedReport is not null)
-                {
-                    <ReportDetails Report="ExplorerVm.SelectedReport" />
+                    <span>Generating…</span>
                 }
                 else
                 {
-                    <MudPaper Class="pa-8 d-flex justify-center align-center" Elevation="1" Style="height: 1000px;">
-                        <MudText Typo="Typo.body1" Color="Color.Secondary">No report selected</MudText>
-                    </MudPaper>
+                    <span>Suggest some questions</span>
                 }
-            </MudItem>
-        </MudGrid>
-    </MudTabPanel>
-</MudTabs>
+            </button>
+        </div>
+
+        @* ── Text input ── matches Python st.text_input("Ask a question...") *@
+        <div style="margin-bottom: 12px;">
+            <label class="st-label" for="question-input">Ask a question to compare the results</label>
+            <input id="question-input"
+                   type="text"
+                   class="st-text-input"
+                   value="@AppState.Question"
+                   @oninput="OnQuestionInput"
+                   @onkeyup="OnSearchKeyUp" />
+        </div>
+
+        @* ── Generated questions list ── matches Python create_questions_list_ui() st.dataframe *@
+        @if (AppState.GeneratedQuestions.Count > 0)
+        {
+            <div class="st-dataframe-container" style="margin-bottom: 12px;">
+                <table class="st-dataframe">
+                    <thead><tr><th>question</th></tr></thead>
+                    <tbody>
+                        @foreach (var q in AppState.GeneratedQuestions)
+                        {
+                            <tr class="st-dataframe-row" @onclick="() => OnQuestionSelected(q)">
+                                <td>@q</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="margin-bottom: 12px;">
+                <button class="st-button" @onclick="ResetQuestions">Reset</button>
+            </div>
+        }
+
+        @* ── Tab bar ── matches Python TabBar(tabs=["Search","Community Explorer"]) *@
+        <div class="st-tabs" role="tablist">
+            <button role="tab"
+                    class="st-tab @(_activeTab == 0 ? "st-tab--active" : "")"
+                    aria-selected="@(_activeTab == 0)"
+                    @onclick='() => SetActiveTab(0)'>Search</button>
+            <button role="tab"
+                    class="st-tab @(_activeTab == 1 ? "st-tab--active" : "")"
+                    aria-selected="@(_activeTab == 1)"
+                    @onclick='() => SetActiveTab(1)'>Community Explorer</button>
+        </div>
+
+        @* ════════════════════  TAB 0 — Search  ════════════════════ *@
+        @if (_activeTab == 0)
+        {
+            @if (!string.IsNullOrWhiteSpace(AppState.Question))
+            {
+                <h5>Answering the question: <em>@AppState.Question</em></h5>
+            }
+
+            @* Error *@
+            @if (!string.IsNullOrEmpty(SearchVm.SearchError))
+            {
+                <div class="st-alert st-alert--error">@SearchVm.SearchError</div>
+            }
+
+            @* Loading spinners *@
+            @if (SearchVm.IsSearching)
+            {
+                <div style="margin-bottom: 12px;">
+                    @foreach (var st in _activeSearchTypes)
+                    {
+                        <p>⏳ Generating answer using @GetSearchTypeLabel(st)...</p>
+                    }
+                </div>
+            }
+
+            @* Results columns — matches Python st.columns(count) *@
+            @if (SearchVm.Results.Count > 0)
+            {
+                <div class="st-columns" style="--col-count: @SearchVm.Results.Count;">
+                    @foreach (var result in SearchVm.Results)
+                    {
+                        <div class="st-column">
+                            <SearchResultPanel Result="result" />
+                        </div>
+                    }
+                </div>
+            }
+            else if (!SearchVm.IsSearching && GetEnabledCount() == 0)
+            {
+                <p>Please select at least one search option from the sidebar.</p>
+            }
+        }
+
+        @* ════════════════════  TAB 1 — Community Explorer  ════════════════════ *@
+        @if (_activeTab == 1)
+        {
+            @* matches Python st.columns([0.33, 0.67]) *@
+            <div class="st-columns" style="--col-count: 3;">
+                <div class="st-column">
+                    <h5>Community Reports</h5>
+
+                    @if (ExplorerVm.Reports.Count > 0)
+                    {
+                        <div class="st-dataframe-container" style="height: 1000px; overflow-y: auto;">
+                            <table class="st-dataframe">
+                                <thead>
+                                    <tr>
+                                        <th>human_readable_id</th>
+                                        <th>title</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var report in ExplorerVm.Reports)
+                                    {
+                                        <tr class="st-dataframe-row @(report == ExplorerVm.SelectedReport ? "st-row--selected" : "")"
+                                            @onclick="() => OnReportSelected(report)">
+                                            <td>@(report.ShortId ?? report.CommunityId)</td>
+                                            <td>@report.Title</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p>No community reports loaded. Select a dataset from the sidebar.</p>
+                    }
+                </div>
+
+                <div class="st-column" style="flex: 2;">
+                    <h5>Selected Report</h5>
+                    @if (ExplorerVm.SelectedReport is not null)
+                    {
+                        <ReportDetails Report="ExplorerVm.SelectedReport" />
+                    }
+                    else
+                    {
+                        <p>No report selected</p>
+                    }
+                </div>
+            </div>
+        }
+    </section>
+</div>

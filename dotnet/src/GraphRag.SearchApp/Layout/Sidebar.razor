@@ -1,7 +1,7 @@
 @inject AppStateViewModel AppState
 
-<div class="px-4 pt-4">
-    <MudText Typo="Typo.subtitle2" Class="mb-3" Style="font-weight: 600;">Options</MudText>
+<div class="st-sidebar-content">
+    <h6 class="st-sidebar-heading">Options</h6>
 
     <MudSelect T="string"
                Value="@AppState.DatasetKey"
@@ -9,7 +9,7 @@
                Label="Dataset"
                Variant="Variant.Outlined"
                Dense="true"
-               Class="mb-4">
+               Style="margin-bottom: 16px;">
         @foreach (var ds in AppState.Datasets)
         {
             <MudSelectItem Value="@ds.Key">@ds.Name</MudSelectItem>
@@ -20,11 +20,11 @@
                      Label="Number of suggested questions"
                      Variant="Variant.Outlined"
                      Min="1" Max="100" Step="1"
-                     Class="mb-4" />
+                     Style="margin-bottom: 16px;" />
 
-    <MudDivider Class="my-2" />
+    <hr class="st-divider" />
 
-    <MudText Typo="Typo.subtitle2" Class="mb-2" Style="font-weight: 600;">Search options:</MudText>
+    <h6 class="st-sidebar-heading">Search options:</h6>
     <MudSwitch @bind-Value="AppState.IncludeBasicRag" Label="Include basic RAG" Color="Color.Primary" />
     <MudSwitch @bind-Value="AppState.IncludeLocalSearch" Label="Include local search" Color="Color.Primary" />
     <MudSwitch @bind-Value="AppState.IncludeGlobalSearch" Label="Include global search" Color="Color.Primary" />
