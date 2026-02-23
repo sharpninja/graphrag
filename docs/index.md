@@ -11,13 +11,14 @@ Figure 1: An LLM-generated knowledge graph built using GPT-4 Turbo.
 </p>
 
 GraphRAG is a structured, hierarchical approach to Retrieval Augmented Generation (RAG), as opposed to naive semantic-search
-approaches using plain text snippets. The GraphRAG process involves extracting a knowledge graph out of raw text, building a community hierarchy, generating summaries for these communities, and then leveraging these structures when perform RAG-based tasks.
+approaches using plain text snippets. The GraphRAG process involves extracting a knowledge graph out of raw text, building a community hierarchy, generating summaries for these communities, and then leveraging these structures when perform RAG-based tasks. GraphRAG is available in both **Python** and **.NET 10 C#** with identical functionality and shared configuration format.
 
 To learn more about GraphRAG and how it can be used to enhance your language model's ability to reason about your private data, please visit the [Microsoft Research Blog Post](https://www.microsoft.com/en-us/research/blog/graphrag-unlocking-llm-discovery-on-narrative-private-data/).
 
 ## Get Started with GraphRAG 🚀
 
 To start using GraphRAG, check out the [_Get Started_](get_started.md) guide.
+For the .NET implementation, see the [.NET Getting Started Guide](../dotnet/docs/getting-started.md).
 For a deeper dive into the main sub-systems, please visit the docpages for the [Indexer](index/overview.md) and [Query](query/overview.md) packages.
 
 ## GraphRAG vs Baseline RAG 🔍

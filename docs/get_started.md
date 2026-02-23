@@ -2,6 +2,9 @@
 
 ⚠️ GraphRAG can consume a lot of LLM resources! We strongly recommend starting with the tutorial dataset here until you understand how the system works, and consider experimenting with fast/inexpensive models first before committing to a big indexing job.
 
+!!! info ".NET Implementation Available"
+    GraphRAG is also available as a .NET 10 C# implementation with a modular strategy-plugin architecture. See the [.NET Getting Started Guide](../dotnet/docs/getting-started.md) for installation, configuration, CLI reference, and agent integration patterns.
+
 ## Requirements
 
 [Python 3.10-3.12](https://www.python.org/downloads/)

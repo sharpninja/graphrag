@@ -21,13 +21,71 @@
 
 ## Overview
 
-The GraphRAG project is a data pipeline and transformation suite that is designed to extract meaningful, structured data from unstructured text using the power of LLMs.
+The GraphRAG project is a data pipeline and transformation suite that is designed to extract meaningful, structured data from unstructured text using the power of LLMs. GraphRAG is available in both **Python** and **.NET 10 C#**, with identical functionality and configuration format across both implementations.
 
 To learn more about GraphRAG and how it can be used to enhance your LLM's ability to reason about your private data, please visit the <a href="https://www.microsoft.com/en-us/research/blog/graphrag-unlocking-llm-discovery-on-narrative-private-data/" target="_blank">Microsoft Research Blog Post.</a>
 
+## Implementations
+
+| | Python | .NET |
+|---|--------|------|
+| **Runtime** | Python 3.10–3.12 | .NET 10 (C#) |
+| **Packages** | 8 packages on [PyPI](https://pypi.org/project/graphrag/) | 8 core libraries + 15 strategy plugin assemblies |
+| **Architecture** | Factory pattern with ABC interfaces | Strategy pattern with runtime assembly discovery |
+| **Config Format** | `settings.yaml` | `settings.yaml` (shared format) |
+| **CLI** | `graphrag` (via pip) | `dotnet run --project src/GraphRag` |
+| **Tests** | pytest (unit, integration, smoke) | xUnit (200 tests — unit + integration) |
+| **Getting Started** | [Python Quickstart](https://microsoft.github.io/graphrag/get_started/) | [.NET Getting Started](dotnet/docs/getting-started.md) |
+
 ## Quickstart
 
-To get started with the GraphRAG system we recommend trying the [command line quickstart](https://microsoft.github.io/graphrag/get_started/).
+### Python
+
+To get started with the Python implementation, we recommend trying the [command line quickstart](https://microsoft.github.io/graphrag/get_started/).
+
+```bash
+pip install graphrag
+graphrag init
+# Add your documents to ./input/
+graphrag index
+graphrag query "What are the top themes in this story?"
+```
+
+### .NET
+
+For the .NET implementation, see the full [.NET Getting Started Guide](dotnet/docs/getting-started.md).
+
+```bash
+git clone https://github.com/microsoft/graphrag.git
+cd graphrag/dotnet
+dotnet build
+dotnet run --project src/GraphRag -- init --root ./my-project
+# Add your documents to ./my-project/input/
+dotnet run --project src/GraphRag -- index --root ./my-project
+dotnet run --project src/GraphRag -- query --root ./my-project --method local --query "What are the top themes?"
+```
+
+## Repository Structure
+
+```
+graphrag/
+├── packages/               ← Python monorepo (8 packages)
+│   ├── graphrag/           ← Main Python package (CLI, indexing, query)
+│   ├── graphrag-common/    ← Shared utilities
+│   ├── graphrag-storage/   ← Storage backends
+│   ├── graphrag-cache/     ← Caching layer
+│   ├── graphrag-chunking/  ← Text chunking
+│   ├── graphrag-input/     ← Document ingestion
+│   ├── graphrag-llm/       ← LLM abstraction
+│   └── graphrag-vectors/   ← Vector stores
+├── dotnet/                 ← .NET 10 implementation
+│   ├── src/                ← 8 core libraries + 15 strategy plugins
+│   ├── tests/              ← Unit + integration tests
+│   └── docs/               ← .NET-specific documentation
+├── docs/                   ← MkDocs documentation site (Python-focused)
+├── tests/                  ← Python test suite
+└── scripts/                ← Build & CI scripts
+```
 
 ## Repository Guidance
 
@@ -38,7 +96,8 @@ This repository presents a methodology for using knowledge graph memory structur
 ## Diving Deeper
 
 - To learn about our contribution guidelines, see [CONTRIBUTING.md](./CONTRIBUTING.md)
-- To start developing _GraphRAG_, see [DEVELOPING.md](./DEVELOPING.md)
+- To start developing the Python implementation, see [DEVELOPING.md](./DEVELOPING.md)
+- For .NET development, see the [.NET Getting Started Guide](dotnet/docs/getting-started.md) and [.NET Project Overview](dotnet/docs/project-overview.md)
 - Join the conversation and provide feedback in the [GitHub Discussions tab!](https://github.com/microsoft/graphrag/discussions)
 
 ## Prompt Tuning
@@ -50,7 +109,9 @@ We strongly recommend to fine-tune your prompts following the [Prompt Tuning Gui
 
 Please see the [breaking changes](./breaking-changes.md) document for notes on our approach to versioning the project.
 
-*Always run `graphrag init --root [path] --force` between minor version bumps to ensure you have the latest config format. Run the provided migration notebook between major version bumps if you want to avoid re-indexing prior datasets. Note that this will overwrite your configuration and prompts, so backup if necessary.*
+**Python**: *Always run `graphrag init --root [path] --force` between minor version bumps to ensure you have the latest config format. Run the provided migration notebook between major version bumps if you want to avoid re-indexing prior datasets. Note that this will overwrite your configuration and prompts, so backup if necessary.*
+
+**.NET**: The .NET implementation shares the same `settings.yaml` configuration format. See [dotnet/docs/getting-started.md](dotnet/docs/getting-started.md) for version-specific details.
 
 ## Responsible AI FAQ
 
