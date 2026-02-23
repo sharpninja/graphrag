@@ -1,0 +1,24 @@
+name: .NET CI
+
+on:
+  push:
+    paths: ['dotnet/**']
+  pull_request:
+    paths: ['dotnet/**']
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - run: dotnet build dotnet/ --configuration Release
+
+      - run: dotnet test dotnet/tests/GraphRag.Tests.Unit --configuration Release --no-build
+
+      - run: dotnet test dotnet/tests/GraphRag.Tests.Integration --configuration Release --no-build
