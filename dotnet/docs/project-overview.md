@@ -9,16 +9,33 @@
 ```
 dotnet/
 ├── src/
-│   ├── GraphRag.Common/        ← Shared foundations (leaf dependency)
-│   ├── GraphRag.Storage/       ← Persistent & in-memory storage
+│   ├── GraphRag.Common/        ← Shared foundations + strategy discovery
+│   ├── GraphRag.Storage/       ← Storage interfaces + file/memory implementations
 │   ├── GraphRag.Cache/         ← LLM response caching
 │   ├── GraphRag.Chunking/      ← Document text splitting
-│   ├── GraphRag.Input/         ← Document ingestion
-│   ├── GraphRag.Llm/           ← LLM abstraction layer
-│   ├── GraphRag.Vectors/       ← Vector store & filtering
-│   └── GraphRag/               ← Main executable (CLI + orchestration)
+│   ├── GraphRag.Input/         ← Document ingestion (core readers)
+│   ├── GraphRag.Llm/           ← LLM abstraction layer (interfaces only)
+│   ├── GraphRag.Vectors/       ← Vector store & filtering (interfaces only)
+│   ├── GraphRag/               ← Main executable (CLI + orchestration)
+│   │
+│   │   Strategy Libraries (plugin assemblies):
+│   ├── GraphRag.Storage.AzureBlob/    ← Azure Blob IStorage
+│   ├── GraphRag.Storage.AzureCosmos/  ← Cosmos DB IStorage
+│   ├── GraphRag.Storage.Parquet/      ← Parquet ITableProvider
+│   ├── GraphRag.Storage.Csv/          ← CsvHelper ITableProvider
+│   ├── GraphRag.Vectors.AzureAiSearch/ ← Azure AI Search IVectorStore
+│   ├── GraphRag.Vectors.AzureCosmos/  ← Cosmos DB IVectorStore
+│   ├── GraphRag.Vectors.LanceDb/     ← LanceDB IVectorStore (stub)
+│   ├── GraphRag.Llm.AzureOpenAi/     ← Azure OpenAI ILlmCompletion/ILlmEmbedding
+│   ├── GraphRag.Llm.SharpToken/      ← SharpToken ITokenizer
+│   ├── GraphRag.Llm.Scriban/         ← Scriban ITemplateEngine
+│   ├── GraphRag.Input.CsvHelper/     ← CsvHelper IInputReader
+│   ├── GraphRag.Input.Markdig/       ← Markdig IInputReader
+│   ├── GraphRag.Input.OpenXml/       ← OpenXml IInputReader
+│   ├── GraphRag.Nlp.Catalyst/        ← Catalyst INounPhraseExtractor
+│   └── GraphRag.Graph.QuikGraph/     ← QuikGraph IGraphAlgorithms
 ├── tests/
-│   ├── GraphRag.Tests.Unit/        ← 181 unit tests
+│   ├── GraphRag.Tests.Unit/        ← 195 unit tests
 │   └── GraphRag.Tests.Integration/ ← 5 integration tests
 └── docs/
 ```
