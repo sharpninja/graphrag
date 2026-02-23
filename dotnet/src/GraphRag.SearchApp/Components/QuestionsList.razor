@@ -1,0 +1,28 @@
+<MudPaper Class="pa-3 mb-4" Elevation="0">
+    <MudText Typo="Typo.subtitle2" Class="mb-2">Suggested Questions</MudText>
+    <MudChipSet T="string" ReadOnly="false">
+        @foreach (var question in Questions)
+        {
+            <MudChip T="string" Color="Color.Default"
+                     Variant="Variant.Outlined"
+                     OnClick="() => OnQuestionClicked.InvokeAsync(question)">
+                @question
+            </MudChip>
+        }
+    </MudChipSet>
+</MudPaper>
+
+@code {
+    /// <summary>
+    /// Gets or sets the list of generated questions.
+    /// </summary>
+    [Parameter]
+    [EditorRequired]
+    public IReadOnlyCollection<string> Questions { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the callback for when a question is clicked.
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> OnQuestionClicked { get; set; }
+}

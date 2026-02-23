@@ -1,0 +1,47 @@
+/* GraphRAG Search App custom styles */
+html, body {
+    font-family: 'Roboto', sans-serif;
+}
+
+.search-result-card {
+    margin-bottom: 16px;
+}
+
+.stat-chip {
+    margin-right: 4px;
+}
+
+.community-detail-content {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3 {
+    margin-top: 12px;
+    margin-bottom: 8px;
+}
+
+.markdown-content p {
+    margin-bottom: 8px;
+}
+
+.markdown-content ul, .markdown-content ol {
+    margin-left: 24px;
+    margin-bottom: 8px;
+}
+
+.markdown-content code {
+    background-color: var(--mud-palette-background-gray);
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-size: 0.9em;
+}
+
+.markdown-content pre {
+    background-color: var(--mud-palette-background-gray);
+    padding: 12px;
+    border-radius: 4px;
+    overflow-x: auto;
+}

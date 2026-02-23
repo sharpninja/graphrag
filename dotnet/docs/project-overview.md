@@ -34,8 +34,11 @@ dotnet/
 │   ├── GraphRag.Input.OpenXml/       ← OpenXml IInputReader
 │   ├── GraphRag.Nlp.Catalyst/        ← Catalyst INounPhraseExtractor
 │   └── GraphRag.Graph.QuikGraph/     ← QuikGraph IGraphAlgorithms
+│   │
+│   │   Web Application:
+│   └── GraphRag.SearchApp/           ← Blazor Server search UI (MudBlazor)
 ├── tests/
-│   ├── GraphRag.Tests.Unit/        ← 195 unit tests
+│   ├── GraphRag.Tests.Unit/        ← 274 unit tests
 │   └── GraphRag.Tests.Integration/ ← 5 integration tests
 └── docs/
 ```
@@ -62,6 +65,12 @@ GraphRag (Exe)
  └── GraphRag.Cache
       ├── GraphRag.Common
       └── GraphRag.Storage
+
+GraphRag.SearchApp (Blazor Server)
+ ├── GraphRag.Common
+ ├── GraphRag.Storage
+ ├── GraphRag.Llm
+ └── GraphRag (reference-only)
 ```
 
 ---
@@ -376,17 +385,49 @@ System.CommandLine subcommands: `init`, `index`, `query`, `prompt-tune` via `Roo
 
 ---
 
+## GraphRag.SearchApp
+
+| Attribute | Value |
+|-----------|-------|
+| **Output** | Blazor Server web application |
+| **Project References** | GraphRag.Common, GraphRag.Storage, GraphRag.Llm, GraphRag (ref-only) |
+| **NuGet** | MudBlazor 8.5.0, Markdig 0.38.0, Parquet.Net 5.3.0, Azure.Identity, Azure.Storage.Blobs |
+| **Role** | Interactive web UI for searching and exploring GraphRAG indexed data |
+
+### Purpose
+A .NET port of the Python/Streamlit `unified-search-app`. Provides:
+- **Search page**: Run Global, Local, DRIFT, and Basic RAG searches in parallel with Markdown-rendered results and stats
+- **Community Explorer**: Browse and filter community reports with detail view
+- **Dataset management**: Switch between datasets via sidebar; supports local parquet and Azure Blob sources
+- MVVM architecture with `ObservableCollection<T>` on all list properties
+
+### Key Types
+- `Config/SearchAppConfig` — `IOptions<T>` configuration (DataRoot, Blob settings, listing file)
+- `Config/DatasetConfig` — Dataset descriptor record
+- `Models/SearchType` — Enum: Basic, Local, Global, Drift
+- `Models/AppSearchResult` — Search result wrapper with stats
+- `Models/KnowledgeModel` — Loaded dataset (entities, relationships, communities, reports, text units, covariates)
+- `ViewModels/AppStateViewModel` — Main app state (scoped per circuit)
+- `ViewModels/SearchViewModel` — Search results and progress
+- `ViewModels/CommunityExplorerViewModel` — Community report browsing
+- `Services/SearchOrchestrator` — Parallel search execution
+- `Services/KnowledgeModelService` — Data loading via DataReader
+- `Services/DatasetLoader` — Dataset listing and datasource creation
+- `Services/MarkdownRenderer` — Markdig pipeline wrapper
+
+---
+
 ## Summary Statistics
 
 | Metric | Count |
 |--------|-------|
-| Source projects | 8 |
+| Source projects | 24 |
 | Test projects | 2 |
-| Source C# files | 272 |
-| Test C# files | 93 |
-| **Total C# files** | **365** |
-| Unit tests | 181 |
+| Source C# files | 305+ |
+| Test C# files | 100+ |
+| **Total C# files** | **405+** |
+| Unit tests | 274 |
 | Integration tests | 5 |
-| **Total tests** | **186** |
+| **Total tests** | **279** |
 | Warnings | 0 |
 | Errors | 0 |

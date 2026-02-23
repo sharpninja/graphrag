@@ -14,6 +14,7 @@
     <Project Path="src/GraphRag.Llm.SharpToken/GraphRag.Llm.SharpToken.csproj" />
     <Project Path="src/GraphRag.Nlp.Catalyst/GraphRag.Nlp.Catalyst.csproj" />
     <Project Path="src/GraphRag.Storage/GraphRag.Storage.csproj" />
+    <Project Path="src/GraphRag.SearchApp/GraphRag.SearchApp.csproj" />
     <Project Path="src/GraphRag.Storage.AzureBlob/GraphRag.Storage.AzureBlob.csproj" />
     <Project Path="src/GraphRag.Storage.AzureCosmos/GraphRag.Storage.AzureCosmos.csproj" />
     <Project Path="src/GraphRag.Storage.Csv/GraphRag.Storage.Csv.csproj" />

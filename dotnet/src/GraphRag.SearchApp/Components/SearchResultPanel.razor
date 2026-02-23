@@ -1,0 +1,22 @@
+@inject MarkdownRenderer Renderer
+
+<MudCard Class="search-result-card" Elevation="2">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">
+                <MudIcon Icon="@GetTypeIcon()" Class="mr-1" />
+                @Result.Type Search
+            </MudText>
+        </CardHeaderContent>
+        <CardHeaderActions>
+            <MudChip T="string" Size="Size.Small" Color="Color.Info" Class="stat-chip">@($"{Result.CompletionTime:F2}s")</MudChip>
+            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Class="stat-chip">@($"{Result.LlmCalls} calls")</MudChip>
+            <MudChip T="string" Size="Size.Small" Color="Color.Success" Class="stat-chip">@($"{Result.PromptTokens + Result.OutputTokens} tokens")</MudChip>
+        </CardHeaderActions>
+    </MudCardHeader>
+    <MudCardContent>
+        <div class="markdown-content">
+            @MarkdownRenderer.RenderToHtml(Result.Response)
+        </div>
+    </MudCardContent>
+</MudCard>

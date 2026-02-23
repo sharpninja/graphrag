@@ -1,0 +1,42 @@
+@inject AppStateViewModel AppState
+
+<MudNavMenu>
+    <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Search">
+        Search
+    </MudNavLink>
+    <MudNavLink Href="/communities" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Groups">
+        Community Explorer
+    </MudNavLink>
+</MudNavMenu>
+
+<MudDivider Class="my-4" />
+
+<div class="px-4">
+    <MudText Typo="Typo.subtitle2" Class="mb-2">Dataset</MudText>
+    <MudSelect T="string"
+               Value="@AppState.DatasetKey"
+               ValueChanged="OnDatasetChanged"
+               Label="Select Dataset"
+               Variant="Variant.Outlined"
+               Dense="true"
+               Class="mb-4">
+        @foreach (var ds in AppState.Datasets)
+        {
+            <MudSelectItem Value="@ds.Key">@ds.Name</MudSelectItem>
+        }
+    </MudSelect>
+
+    <MudText Typo="Typo.subtitle2" Class="mb-2">Search Types</MudText>
+    <MudSwitch @bind-Value="AppState.IncludeGlobalSearch" Label="Global" Color="Color.Primary" />
+    <MudSwitch @bind-Value="AppState.IncludeLocalSearch" Label="Local" Color="Color.Secondary" />
+    <MudSwitch @bind-Value="AppState.IncludeDriftSearch" Label="DRIFT" Color="Color.Tertiary" />
+    <MudSwitch @bind-Value="AppState.IncludeBasicRag" Label="Basic RAG" Color="Color.Info" />
+
+    <MudDivider Class="my-4" />
+
+    <MudNumericField @bind-Value="AppState.SuggestedQuestionsCount"
+                     Label="Suggested Questions"
+                     Variant="Variant.Outlined"
+                     Min="1" Max="20"
+                     Class="mb-4" />
+</div>

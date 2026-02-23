@@ -13,6 +13,7 @@
     <ProjectReference Include="..\..\src\GraphRag.Input\GraphRag.Input.csproj" />
     <ProjectReference Include="..\..\src\GraphRag.Llm\GraphRag.Llm.csproj" />
     <ProjectReference Include="..\..\src\GraphRag.Vectors\GraphRag.Vectors.csproj" />
+    <ProjectReference Include="..\..\src\GraphRag.SearchApp\GraphRag.SearchApp.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -15,7 +15,8 @@ A step-by-step guide to setting up, configuring, and running **GraphRAG for .NET
 7. [CLI Reference](#cli-reference)
 8. [Integrating with an Agent](#integrating-with-an-agent)
 9. [Programmatic API Usage](#programmatic-api-usage)
-10. [Troubleshooting](#troubleshooting)
+10. [Search Web App](#search-web-app)
+11. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -676,6 +677,48 @@ IStorage storage = factory.Create("file", new Dictionary<string, object?>
     ["base_dir"] = "./my-project/output",
 });
 ```
+
+---
+
+## Search Web App
+
+The **GraphRag.SearchApp** is a Blazor Server web application that provides an interactive UI for searching and exploring your GraphRAG indexed data. It is the .NET equivalent of the Python/Streamlit `unified-search-app`.
+
+### Running the Search App
+
+```bash
+cd dotnet/src/GraphRag.SearchApp
+dotnet run
+```
+
+The app launches at `https://localhost:5001` by default.
+
+### Configuration
+
+Edit `appsettings.json` to point to your indexed data:
+
+```json
+{
+  "SearchApp": {
+    "DataRoot": "./output",
+    "ListingFile": "listing.json",
+    "DefaultSuggestedQuestions": 5,
+    "BlobAccountName": "",
+    "BlobContainerName": ""
+  }
+}
+```
+
+- **DataRoot**: Local directory containing indexed output and `listing.json`
+- **BlobAccountName/BlobContainerName**: Set both to read datasets from Azure Blob Storage instead of local files
+- **ListingFile**: JSON file listing available datasets (array of `{ key, path, name, description, communityLevel }` objects)
+
+### Features
+
+- **Search**: Run Global, Local, DRIFT, and Basic RAG searches in parallel
+- **Community Explorer**: Browse community reports filtered by level
+- **Dataset switching**: Select from multiple datasets via the sidebar
+- **Markdown rendering**: LLM responses rendered as formatted HTML
 
 ---
 

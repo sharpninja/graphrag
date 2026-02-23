@@ -1,0 +1,31 @@
+@inject MarkdownRenderer Renderer
+
+<MudPaper Class="pa-4 community-detail-content" Elevation="1" Style="height: calc(100vh - 120px); overflow-y: auto;">
+    <MudText Typo="Typo.h5" Class="mb-2">@Report.Title</MudText>
+
+    <div class="d-flex mb-4">
+        <MudChip T="string" Size="Size.Small" Color="Color.Primary">Community @Report.CommunityId</MudChip>
+        @if (Report.Rank.HasValue)
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Info" Class="ml-2">Rank: @Report.Rank.Value.ToString("F1")</MudChip>
+        }
+        @if (Report.Size.HasValue)
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Success" Class="ml-2">Size: @Report.Size.Value</MudChip>
+        }
+    </div>
+
+    @if (!string.IsNullOrEmpty(Report.Summary))
+    {
+        <MudText Typo="Typo.subtitle1" Class="mb-1">Summary</MudText>
+        <MudText Typo="Typo.body2" Class="mb-4">@Report.Summary</MudText>
+    }
+
+    @if (!string.IsNullOrEmpty(Report.FullContent))
+    {
+        <MudText Typo="Typo.subtitle1" Class="mb-1">Full Report</MudText>
+        <div class="markdown-content">
+            @MarkdownRenderer.RenderToHtml(Report.FullContent)
+        </div>
+    }
+</MudPaper>
