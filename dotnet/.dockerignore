@@ -8,12 +8,13 @@ tests/
 
 # Documentation
 docs/
-*.md
+**/*.md
 LICENSE
 
 # Git
 .git/
 .gitignore
+.gitattributes
 
 # IDE
 *.user
@@ -25,5 +26,5 @@ LICENSE
 Thumbs.db
 .DS_Store
 
-# Tools
+# Tools and config not needed for build
 tools/

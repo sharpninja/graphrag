@@ -7,7 +7,7 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0-preview AS build
 WORKDIR /src
 
 # Copy solution-level files first for layer caching
-COPY Directory.Build.props Directory.Packages.props nuget.config global.json GraphRag.slnx ./
+COPY Directory.Build.props Directory.Packages.props nuget.config GraphRag.slnx .editorconfig ./
 
 # Copy project files for restore
 COPY src/GraphRag.Common/GraphRag.Common.csproj src/GraphRag.Common/
