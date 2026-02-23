@@ -67,3 +67,4 @@ packages/*/LICENSE
 # Notebooks outputs
 packages/graphrag-*/example_notebooks/**/output
 packages/graphrag-*/example_notebooks/**/cache
+AGENTS-README-FIRST.yaml
