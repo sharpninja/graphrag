@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\GraphRag\GraphRag.csproj" />
+    <ProjectReference Include="..\..\src\GraphRag.Common\GraphRag.Common.csproj" />
+    <ProjectReference Include="..\..\src\GraphRag.Storage\GraphRag.Storage.csproj" />
+    <ProjectReference Include="..\..\src\GraphRag.Cache\GraphRag.Cache.csproj" />
+    <ProjectReference Include="..\..\src\GraphRag.Chunking\GraphRag.Chunking.csproj" />
+    <ProjectReference Include="..\..\src\GraphRag.Input\GraphRag.Input.csproj" />
+    <ProjectReference Include="..\..\src\GraphRag.Llm\GraphRag.Llm.csproj" />
+    <ProjectReference Include="..\..\src\GraphRag.Vectors\GraphRag.Vectors.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Moq" />
+    <PackageReference Include="FluentAssertions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

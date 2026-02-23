@@ -1,0 +1,19 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/GraphRag.Cache/GraphRag.Cache.csproj" />
+    <Project Path="src/GraphRag.Chunking/GraphRag.Chunking.csproj" />
+    <Project Path="src/GraphRag.Common/GraphRag.Common.csproj" />
+    <Project Path="src/GraphRag.Input/GraphRag.Input.csproj" />
+    <Project Path="src/GraphRag.Llm/GraphRag.Llm.csproj" />
+    <Project Path="src/GraphRag.Storage/GraphRag.Storage.csproj" />
+    <Project Path="src/GraphRag.Vectors/GraphRag.Vectors.csproj" />
+    <Project Path="src/GraphRag/GraphRag.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/GraphRag.Tests.Common/GraphRag.Tests.Common.csproj" />
+    <Project Path="tests/GraphRag.Tests.Integration/GraphRag.Tests.Integration.csproj" />
+    <Project Path="tests/GraphRag.Tests.Smoke/GraphRag.Tests.Smoke.csproj" />
+    <Project Path="tests/GraphRag.Tests.Unit/GraphRag.Tests.Unit.csproj" />
+    <Project Path="tests/GraphRag.Tests.Verbs/GraphRag.Tests.Verbs.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>GraphRag</RootNamespace>
+    <AssemblyName>graphrag</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GraphRag.Common\GraphRag.Common.csproj" />
+    <ProjectReference Include="..\GraphRag.Storage\GraphRag.Storage.csproj" />
+    <ProjectReference Include="..\GraphRag.Cache\GraphRag.Cache.csproj" />
+    <ProjectReference Include="..\GraphRag.Chunking\GraphRag.Chunking.csproj" />
+    <ProjectReference Include="..\GraphRag.Input\GraphRag.Input.csproj" />
+    <ProjectReference Include="..\GraphRag.Llm\GraphRag.Llm.csproj" />
+    <ProjectReference Include="..\GraphRag.Vectors\GraphRag.Vectors.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" />
+    <PackageReference Include="Spectre.Console" />
+    <PackageReference Include="QuikGraph" />
+    <PackageReference Include="Catalyst" />
+    <PackageReference Include="FluentValidation" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
+    <PackageReference Include="NetEscapades.Configuration.Yaml" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" />
+  </ItemGroup>
+
+</Project>
