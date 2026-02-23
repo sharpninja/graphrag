@@ -12,6 +12,20 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<SearchAppConfig>(
     builder.Configuration.GetSection("SearchApp"));
 
+// Handle --seed command
+if (args.Contains("--seed", StringComparer.OrdinalIgnoreCase))
+{
+    var config = new SearchAppConfig();
+    builder.Configuration.GetSection("SearchApp").Bind(config);
+    var force = args.Contains("--force", StringComparer.OrdinalIgnoreCase);
+    await SeedDataService.SeedAsync(config, force).ConfigureAwait(false);
+
+    if (!args.Contains("--run", StringComparer.OrdinalIgnoreCase))
+    {
+        return;
+    }
+}
+
 // MudBlazor
 builder.Services.AddMudServices();
 
