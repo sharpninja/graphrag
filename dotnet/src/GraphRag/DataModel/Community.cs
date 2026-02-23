@@ -57,4 +57,27 @@ public sealed record Community : Named
     /// Gets the period of the community.
     /// </summary>
     public string? Period { get; init; }
+
+    /// <summary>
+    /// Creates a <see cref="Community"/> from a dictionary of values.
+    /// </summary>
+    /// <param name="data">The dictionary containing community data.</param>
+    /// <returns>A new <see cref="Community"/> instance.</returns>
+    public static Community FromDictionary(Dictionary<string, object?> data)
+    {
+        return new Community
+        {
+            Id = data.TryGetValue("id", out var id) ? id?.ToString() ?? string.Empty : string.Empty,
+            ShortId = data.TryGetValue("short_id", out var shortId) ? shortId?.ToString() : null,
+            Title = data.TryGetValue("title", out var title) ? title?.ToString() ?? string.Empty : string.Empty,
+            Level = data.TryGetValue("level", out var level) ? level?.ToString() ?? string.Empty : string.Empty,
+            Parent = data.TryGetValue("parent", out var parent) ? parent?.ToString() ?? string.Empty : string.Empty,
+            Children = data.TryGetValue("children", out var children) ? children as IReadOnlyList<string> ?? [] : [],
+            EntityIds = data.TryGetValue("entity_ids", out var eIds) ? eIds as IReadOnlyList<string> : null,
+            RelationshipIds = data.TryGetValue("relationship_ids", out var rIds) ? rIds as IReadOnlyList<string> : null,
+            TextUnitIds = data.TryGetValue("text_unit_ids", out var tuIds) ? tuIds as IReadOnlyList<string> : null,
+            Size = data.TryGetValue("size", out var size) && size is int s ? s : null,
+            Period = data.TryGetValue("period", out var period) ? period?.ToString() : null,
+        };
+    }
 }

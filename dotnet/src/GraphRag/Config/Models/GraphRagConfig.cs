@@ -7,6 +7,7 @@ using GraphRag.Config.Enums;
 using GraphRag.Input;
 using GraphRag.Llm.Config;
 using GraphRag.Storage;
+using GraphRag.Storage.Tables;
 using GraphRag.Vectors;
 
 namespace GraphRag.Config.Models;
@@ -27,6 +28,12 @@ public sealed record GraphRagConfig
 
     /// <summary>Gets the async execution mode.</summary>
     public string AsyncMode { get; init; } = AsyncType.Threaded;
+
+    /// <summary>Gets the table provider type for data storage.</summary>
+    public string? TableProvider { get; init; }
+
+    /// <summary>Gets the list of workflow names to execute.</summary>
+    public IReadOnlyList<string>? Workflows { get; init; }
 
     /// <summary>Gets the reporting configuration.</summary>
     public ReportingConfig Reporting { get; init; } = new();
@@ -90,4 +97,38 @@ public sealed record GraphRagConfig
 
     /// <summary>Gets the vector store configuration.</summary>
     public VectorStoreConfig VectorStore { get; init; } = new() { Type = "lancedb", DbUri = "output/lancedb" };
+
+    /// <summary>
+    /// Gets the completion model configuration for the specified model identifier.
+    /// </summary>
+    /// <param name="modelId">The model identifier, or <c>null</c> to use the default.</param>
+    /// <returns>The model configuration.</returns>
+    /// <exception cref="KeyNotFoundException">Thrown when the model identifier is not found.</exception>
+    public ModelConfig GetCompletionModelConfig(string? modelId = null)
+    {
+        var key = modelId ?? DefaultValues.DefaultCompletionModelId;
+        if (CompletionModels.TryGetValue(key, out var config))
+        {
+            return config;
+        }
+
+        throw new KeyNotFoundException($"Completion model '{key}' not found in configuration.");
+    }
+
+    /// <summary>
+    /// Gets the embedding model configuration for the specified model identifier.
+    /// </summary>
+    /// <param name="modelId">The model identifier, or <c>null</c> to use the default.</param>
+    /// <returns>The model configuration.</returns>
+    /// <exception cref="KeyNotFoundException">Thrown when the model identifier is not found.</exception>
+    public ModelConfig GetEmbeddingModelConfig(string? modelId = null)
+    {
+        var key = modelId ?? DefaultValues.DefaultEmbeddingModelId;
+        if (EmbeddingModels.TryGetValue(key, out var config))
+        {
+            return config;
+        }
+
+        throw new KeyNotFoundException($"Embedding model '{key}' not found in configuration.");
+    }
 }

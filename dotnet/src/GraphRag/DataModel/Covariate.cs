@@ -32,4 +32,23 @@ public sealed record Covariate : Identified
     /// Gets the additional attributes of the covariate.
     /// </summary>
     public Dictionary<string, object?>? Attributes { get; init; }
+
+    /// <summary>
+    /// Creates a <see cref="Covariate"/> from a dictionary of values.
+    /// </summary>
+    /// <param name="data">The dictionary containing covariate data.</param>
+    /// <returns>A new <see cref="Covariate"/> instance.</returns>
+    public static Covariate FromDictionary(Dictionary<string, object?> data)
+    {
+        return new Covariate
+        {
+            Id = data.TryGetValue("id", out var id) ? id?.ToString() ?? string.Empty : string.Empty,
+            ShortId = data.TryGetValue("short_id", out var shortId) ? shortId?.ToString() : null,
+            SubjectId = data.TryGetValue("subject_id", out var sid) ? sid?.ToString() ?? string.Empty : string.Empty,
+            SubjectType = data.TryGetValue("subject_type", out var st) ? st?.ToString() ?? "entity" : "entity",
+            CovariateType = data.TryGetValue("covariate_type", out var ct) ? ct?.ToString() ?? "claim" : "claim",
+            TextUnitIds = data.TryGetValue("text_unit_ids", out var tuIds) ? tuIds as IReadOnlyList<string> : null,
+            Attributes = data.TryGetValue("attributes", out var attrs) ? attrs as Dictionary<string, object?> : null,
+        };
+    }
 }

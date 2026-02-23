@@ -2,6 +2,7 @@
 // Licensed under the MIT License
 
 using GraphRag.Config.Defaults;
+using GraphRag.Prompts;
 
 namespace GraphRag.Config.Models;
 
@@ -24,4 +25,13 @@ public sealed record ExtractGraphConfig
 
     /// <summary>Gets the maximum number of gleaning iterations.</summary>
     public int MaxGleanings { get; init; } = 1;
+
+    /// <summary>
+    /// Gets the resolved prompt template, falling back to the embedded resource when not configured.
+    /// </summary>
+    /// <returns>The resolved prompt text.</returns>
+    public string ResolvedPrompt()
+    {
+        return Prompt ?? PromptResources.GetPrompt(PromptResources.ExtractGraph);
+    }
 }

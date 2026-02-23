@@ -2,6 +2,7 @@
 // Licensed under the MIT License
 
 using GraphRag.Config.Defaults;
+using GraphRag.Prompts;
 
 namespace GraphRag.Config.Models;
 
@@ -27,4 +28,15 @@ public sealed record CommunityReportsConfig
 
     /// <summary>Gets the maximum input length in tokens.</summary>
     public int MaxInputLength { get; init; } = 8000;
+
+    /// <summary>
+    /// Gets the resolved prompt templates, falling back to embedded resources when not configured.
+    /// </summary>
+    /// <returns>A tuple of (graphPrompt, textPrompt).</returns>
+    public (string GraphPrompt, string TextPrompt) ResolvedPrompts()
+    {
+        return (
+            GraphPrompt ?? PromptResources.GetPrompt(PromptResources.CommunityReport),
+            TextPrompt ?? PromptResources.GetPrompt(PromptResources.CommunityReportText));
+    }
 }
