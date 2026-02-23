@@ -1,6 +1,7 @@
 // Copyright (c) 2025 Microsoft Corporation.
 // Licensed under the MIT License
 
+using GraphRag.Common.Discovery;
 using GraphRag.Common.Hasher;
 
 namespace GraphRag.Common.Factories;
@@ -50,6 +51,42 @@ public abstract class ServiceFactory<T>
         ServiceScope scope = ServiceScope.Transient)
     {
         _serviceInitializers[strategy] = new ServiceDescriptor<T>(scope, initializer);
+    }
+
+    /// <summary>
+    /// Register strategy implementations discovered by <see cref="StrategyDiscovery"/>.
+    /// Each discovered type that implements <typeparamref name="T"/> is registered
+    /// using its strategy key and instantiated via <see cref="Activator.CreateInstance(Type, object[])"/>.
+    /// </summary>
+    /// <param name="discovery">The discovery instance containing scanned strategies.</param>
+    /// <param name="scope">The scope for discovered strategies.</param>
+    /// <returns>The number of strategies registered.</returns>
+    public int RegisterFromDiscovery(
+        StrategyDiscovery discovery,
+        ServiceScope scope = ServiceScope.Transient)
+    {
+        var descriptors = discovery.GetDescriptors<T>();
+        var count = 0;
+
+        foreach (var descriptor in descriptors)
+        {
+            var implType = descriptor.ImplementationType;
+
+            // Skip if already registered.
+            if (_serviceInitializers.ContainsKey(descriptor.StrategyKey))
+            {
+                continue;
+            }
+
+            Register(
+                descriptor.StrategyKey,
+                args => (T)Activator.CreateInstance(implType)!,
+                scope);
+
+            count++;
+        }
+
+        return count;
     }
 
     /// <summary>
