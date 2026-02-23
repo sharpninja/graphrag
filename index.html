@@ -2001,10 +2001,11 @@ Figure 1: An LLM-generated knowledge graph built using GPT-4 Turbo.
 </p>
 
 <p>GraphRAG is a structured, hierarchical approach to Retrieval Augmented Generation (RAG), as opposed to naive semantic-search
-approaches using plain text snippets. The GraphRAG process involves extracting a knowledge graph out of raw text, building a community hierarchy, generating summaries for these communities, and then leveraging these structures when perform RAG-based tasks.</p>
+approaches using plain text snippets. The GraphRAG process involves extracting a knowledge graph out of raw text, building a community hierarchy, generating summaries for these communities, and then leveraging these structures when perform RAG-based tasks. GraphRAG is available in both <strong>Python</strong> and <strong>.NET 10 C#</strong> with identical functionality and shared configuration format.</p>
 <p>To learn more about GraphRAG and how it can be used to enhance your language model's ability to reason about your private data, please visit the <a href="https://www.microsoft.com/en-us/research/blog/graphrag-unlocking-llm-discovery-on-narrative-private-data/">Microsoft Research Blog Post</a>.</p>
 <h2 id="get-started-with-graphrag">Get Started with GraphRAG 🚀</h2>
 <p>To start using GraphRAG, check out the <a href="get_started/"><em>Get Started</em></a> guide.
+For the .NET implementation, see the <a href="../dotnet/docs/getting-started.md">.NET Getting Started Guide</a>.
 For a deeper dive into the main sub-systems, please visit the docpages for the <a href="index/overview/">Indexer</a> and <a href="query/overview/">Query</a> packages.</p>
 <h2 id="graphrag-vs-baseline-rag">GraphRAG vs Baseline RAG 🔍</h2>
 <p>Retrieval-Augmented Generation (RAG) is a technique to improve LLM outputs using real-world information. This technique is an important part of most LLM-based tools and the majority of RAG approaches use vector similarity as the search technique, which we call <em>Baseline RAG</em>. GraphRAG uses knowledge graphs to provide substantial improvements in question-and-answer performance when reasoning about complex information. RAG techniques have shown promise in helping LLMs to reason about <em>private datasets</em> - data that the LLM is not trained on and has never seen before, such as an enterprise’s proprietary research, business documents, or communications. <em>Baseline RAG</em> was created to help solve this problem, but we observe situations where baseline RAG performs very poorly. For example:</p>
