@@ -1,0 +1,23 @@
+# Docker Compose for GraphRAG Blazor Search App
+# Usage:
+#   docker compose up --build
+#   docker compose up -d          # detached
+#   docker compose down
+
+services:
+  search-app:
+    build:
+      context: ../../
+      dockerfile: src/GraphRag.SearchApp/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - SearchApp__DataRoot=/data/output
+      # Uncomment and set for Azure Blob Storage:
+      # - SearchApp__BlobAccountName=mystorageaccount
+      # - SearchApp__BlobContainerName=graphrag-data
+    volumes:
+      # Mount your local GraphRAG output directory
+      - ./output:/data/output:ro
+    restart: unless-stopped

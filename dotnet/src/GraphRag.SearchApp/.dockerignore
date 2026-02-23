@@ -1,0 +1,29 @@
+# Build artifacts
+**/bin/
+**/obj/
+**/.vs/
+
+# Test projects (not needed in runtime image)
+tests/
+
+# Documentation
+docs/
+*.md
+LICENSE
+
+# Git
+.git/
+.gitignore
+
+# IDE
+*.user
+*.suo
+.idea/
+.vscode/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Tools
+tools/

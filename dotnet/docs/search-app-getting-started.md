@@ -9,13 +9,14 @@ A step-by-step guide to setting up, configuring, and running the **GraphRAG Blaz
 1. [Overview](#overview)
 2. [Prerequisites](#prerequisites)
 3. [Build & Run](#build--run)
-4. [Preparing Your Data](#preparing-your-data)
-5. [Configuration Reference](#configuration-reference)
-6. [Using the App](#using-the-app)
-7. [Data Sources](#data-sources)
-8. [Architecture](#architecture)
-9. [Extending the App](#extending-the-app)
-10. [Troubleshooting](#troubleshooting)
+4. [Docker](#docker)
+5. [Preparing Your Data](#preparing-your-data)
+6. [Configuration Reference](#configuration-reference)
+7. [Using the App](#using-the-app)
+8. [Data Sources](#data-sources)
+9. [Architecture](#architecture)
+10. [Extending the App](#extending-the-app)
+11. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -105,6 +106,96 @@ Development mode enables:
 # Hot reload — auto-rebuilds when files change
 dotnet watch run
 ```
+
+---
+
+## Docker
+
+The Search App includes Docker support for containerized deployment, mirroring the Python `unified-search-app` Dockerfile pattern.
+
+### Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/) 20.10 or later
+- [Docker Compose](https://docs.docker.com/compose/install/) v2 (included with Docker Desktop)
+
+### Quick Start with Docker Compose
+
+The simplest way to run the app in Docker:
+
+```bash
+cd dotnet/src/GraphRag.SearchApp
+
+# Place your indexed data in ./output/ (or change the volume mount)
+mkdir -p output
+
+# Build and start
+docker compose up --build
+```
+
+The app is available at `http://localhost:8080`.
+
+### Build the Image Directly
+
+```bash
+# From the dotnet/ directory (build context needs solution-level files)
+cd dotnet
+docker build -f src/GraphRag.SearchApp/Dockerfile -t graphrag-search-app .
+```
+
+### Run the Container
+
+```bash
+# Basic run with local data mount
+docker run -d \
+  --name graphrag-search \
+  -p 8080:8080 \
+  -v /path/to/your/output:/data/output:ro \
+  graphrag-search-app
+
+# With Azure Blob Storage
+docker run -d \
+  --name graphrag-search \
+  -p 8080:8080 \
+  -e SearchApp__BlobAccountName=mystorageaccount \
+  -e SearchApp__BlobContainerName=graphrag-data \
+  -e AZURE_CLIENT_ID=your-client-id \
+  -e AZURE_TENANT_ID=your-tenant-id \
+  -e AZURE_CLIENT_SECRET=your-client-secret \
+  graphrag-search-app
+```
+
+### Docker Compose Configuration
+
+The `docker-compose.yml` file is in `dotnet/src/GraphRag.SearchApp/`:
+
+```yaml
+services:
+  search-app:
+    build:
+      context: ../../
+      dockerfile: src/GraphRag.SearchApp/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - SearchApp__DataRoot=/data/output
+    volumes:
+      - ./output:/data/output:ro
+    restart: unless-stopped
+```
+
+Customize by uncommenting the Azure Blob environment variables or changing the volume mount path.
+
+### Comparison with Python Docker Setup
+
+| | Python (`unified-search-app`) | .NET (`GraphRag.SearchApp`) |
+|---|---|---|
+| **Base image** | `mcr.microsoft.com/oryx/python:3.11` | `mcr.microsoft.com/dotnet/aspnet:10.0-preview` |
+| **Build** | Single-stage (uv sync) | Multi-stage (restore → publish → runtime) |
+| **Port** | 8501 (Streamlit) | 8080 (Kestrel) |
+| **Entry point** | `uv run poe start_prod` | `dotnet GraphRag.SearchApp.dll` |
+| **Data mount** | N/A (env vars) | `/data/output` volume |
+| **Non-root user** | No | Yes (`appuser`) |
 
 ---
 
@@ -515,6 +606,9 @@ MudBlazor themes can be configured in `Layout/MainLayout.razor`:
 | **Blob storage auth failure** | Run `az login` or set `AZURE_CLIENT_ID`/`AZURE_TENANT_ID`/`AZURE_CLIENT_SECRET` |
 | **Search returns errors** | Ensure LLM/embedding services are configured and accessible |
 | **Parquet read errors** | Verify files are valid Parquet format (not CSV renamed to .parquet) |
+| **Docker build fails** | Ensure you run `docker build` from the `dotnet/` directory (not `src/GraphRag.SearchApp/`) |
+| **Container can't read data** | Check the volume mount path and permissions; use `:ro` for read-only |
+| **Docker port conflict** | Change the host port: `-p 9090:8080` or update `docker-compose.yml` |
 
 ### Checking Logs
 
