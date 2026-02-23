@@ -2,66 +2,159 @@
 @page "/search"
 @inject AppStateViewModel AppState
 @inject SearchViewModel SearchVm
+@inject CommunityExplorerViewModel ExplorerVm
 @inject SearchOrchestrator Orchestrator
 @inject MarkdownRenderer Renderer
 
-<PageTitle>Search - GraphRAG</PageTitle>
+<PageTitle>GraphRAG Search</PageTitle>
 
-<MudGrid>
-    <MudItem xs="12">
-        <MudPaper Class="pa-4 mb-4" Elevation="1">
-            <MudGrid>
-                <MudItem xs="10">
-                    <MudTextField @bind-Value="AppState.Question"
-                                  Label="Ask a question"
-                                  Variant="Variant.Outlined"
-                                  Adornment="Adornment.Start"
-                                  AdornmentIcon="@Icons.Material.Filled.Search"
-                                  OnKeyUp="OnSearchKeyUp" />
-                </MudItem>
-                <MudItem xs="2" Class="d-flex align-center">
-                    <MudButton Variant="Variant.Filled"
-                               Color="Color.Primary"
-                               OnClick="ExecuteSearch"
-                               Disabled="@(SearchVm.IsSearching || string.IsNullOrWhiteSpace(AppState.Question))"
-                               FullWidth="true">
-                        @if (SearchVm.IsSearching)
-                        {
-                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
-                        }
-                        Search
-                    </MudButton>
-                </MudItem>
-            </MudGrid>
-        </MudPaper>
-    </MudItem>
+@* Dataset Header *@
+@if (AppState.DatasetConfig is not null)
+{
+    <MudText Typo="Typo.h4" Class="mb-1">GraphRAG: @AppState.DatasetConfig.Name</MudText>
+    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">@AppState.DatasetConfig.Description</MudText>
+}
 
-    @if (AppState.GeneratedQuestions.Count > 0)
-    {
-        <MudItem xs="12">
-            <QuestionsList Questions="AppState.GeneratedQuestions"
-                           OnQuestionClicked="OnQuestionSelected" />
-        </MudItem>
-    }
+@* Tab Bar — matches Python TabBar with red styling *@
+<MudTabs @bind-ActivePanelIndex="_activeTab"
+         Elevation="0"
+         Rounded="true"
+         ApplyEffectsToContainer="true"
+         Class="mb-4 graphrag-tabs">
+    <MudTabPanel Text="Search">
+        @* Question Suggestion Section *@
+        <div class="d-flex align-center mb-3 mt-2">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       OnClick="SuggestQuestions"
+                       Disabled="@_isSuggesting"
+                       Size="Size.Small">
+                @if (_isSuggesting)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                }
+                Suggest some questions
+            </MudButton>
+            @if (AppState.GeneratedQuestions.Count > 0)
+            {
+                <MudButton Variant="Variant.Text"
+                           Color="Color.Default"
+                           OnClick="ResetQuestions"
+                           Size="Size.Small"
+                           Class="ml-2">
+                    Reset
+                </MudButton>
+            }
+        </div>
 
-    @if (!string.IsNullOrEmpty(SearchVm.SearchError))
-    {
-        <MudItem xs="12">
+        @* Generated Questions — selectable list *@
+        @if (AppState.GeneratedQuestions.Count > 0)
+        {
+            <MudSimpleTable Dense="true" Hover="true" Bordered="false" Class="mb-4 question-table">
+                <thead>
+                    <tr><th>question</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var q in AppState.GeneratedQuestions)
+                    {
+                        <tr class="cursor-pointer" @onclick="() => OnQuestionSelected(q)">
+                            <td>@q</td>
+                        </tr>
+                    }
+                </tbody>
+            </MudSimpleTable>
+        }
+
+        @* Search Input — no button, Enter triggers search *@
+        <MudTextField @bind-Value="AppState.Question"
+                      Label="Ask a question to compare the results"
+                      Variant="Variant.Outlined"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      OnKeyUp="OnSearchKeyUp"
+                      FullWidth="true"
+                      Class="mb-4" />
+
+        @* Error Alert *@
+        @if (!string.IsNullOrEmpty(SearchVm.SearchError))
+        {
             <MudAlert Severity="Severity.Error" Class="mb-4">@SearchVm.SearchError</MudAlert>
-        </MudItem>
-    }
+        }
 
-    @if (SearchVm.IsSearching)
-    {
-        <MudItem xs="12">
-            <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="mb-4" />
-        </MudItem>
-    }
+        @* Per-search-type loading spinners *@
+        @if (SearchVm.IsSearching)
+        {
+            <div class="mb-4">
+                @foreach (var st in _activeSearchTypes)
+                {
+                    <div class="d-flex align-center mb-1">
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                        <MudText Typo="Typo.body2">Generating answer using @GetSearchTypeLabel(st)...</MudText>
+                    </div>
+                }
+            </div>
+        }
 
-    @foreach (var result in SearchVm.Results)
-    {
-        <MudItem xs="12" md="@GetColumnWidth()">
-            <SearchResultPanel Result="result" />
-        </MudItem>
-    }
-</MudGrid>
+        @* Results — equal-width columns *@
+        @if (SearchVm.Results.Count > 0)
+        {
+            <MudGrid>
+                @foreach (var result in SearchVm.Results)
+                {
+                    <MudItem xs="@GetColumnWidth()">
+                        <SearchResultPanel Result="result" />
+                    </MudItem>
+                }
+            </MudGrid>
+        }
+    </MudTabPanel>
+
+    <MudTabPanel Text="Community Explorer">
+        <MudGrid Class="mt-2">
+            <MudItem xs="12" md="4">
+                <MudPaper Class="pa-4" Elevation="1" Style="height: 1000px; overflow-y: auto;">
+                    <MudText Typo="Typo.h5" Class="mb-3">Community Reports</MudText>
+
+                    <MudSimpleTable Dense="true" Hover="true" Bordered="false" Class="report-list-table">
+                        <thead>
+                            <tr>
+                                <th>human_readable_id</th>
+                                <th>title</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var report in ExplorerVm.Reports)
+                            {
+                                <tr class="cursor-pointer @(report == ExplorerVm.SelectedReport ? "mud-selected-item" : string.Empty)"
+                                    @onclick="() => OnReportSelected(report)">
+                                    <td>@(report.ShortId ?? report.CommunityId)</td>
+                                    <td>@report.Title</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </MudSimpleTable>
+
+                    @if (ExplorerVm.Reports.Count == 0)
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-4">
+                            No community reports loaded. Select a dataset from the sidebar.
+                        </MudText>
+                    }
+                </MudPaper>
+            </MudItem>
+
+            <MudItem xs="12" md="8">
+                @if (ExplorerVm.SelectedReport is not null)
+                {
+                    <ReportDetails Report="ExplorerVm.SelectedReport" />
+                }
+                else
+                {
+                    <MudPaper Class="pa-8 d-flex justify-center align-center" Elevation="1" Style="height: 1000px;">
+                        <MudText Typo="Typo.body1" Color="Color.Secondary">No report selected</MudText>
+                    </MudPaper>
+                }
+            </MudItem>
+        </MudGrid>
+    </MudTabPanel>
+</MudTabs>

@@ -1,22 +1,42 @@
 @inject MarkdownRenderer Renderer
 
-<MudCard Class="search-result-card" Elevation="2">
-    <MudCardHeader>
-        <CardHeaderContent>
-            <MudText Typo="Typo.h6">
-                <MudIcon Icon="@GetTypeIcon()" Class="mr-1" />
-                @Result.Type Search
-            </MudText>
-        </CardHeaderContent>
-        <CardHeaderActions>
-            <MudChip T="string" Size="Size.Small" Color="Color.Info" Class="stat-chip">@($"{Result.CompletionTime:F2}s")</MudChip>
-            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Class="stat-chip">@($"{Result.LlmCalls} calls")</MudChip>
-            <MudChip T="string" Size="Size.Small" Color="Color.Success" Class="stat-chip">@($"{Result.PromptTokens + Result.OutputTokens} tokens")</MudChip>
-        </CardHeaderActions>
-    </MudCardHeader>
-    <MudCardContent>
-        <div class="markdown-content">
-            @MarkdownRenderer.RenderToHtml(Result.Response)
-        </div>
-    </MudCardContent>
-</MudCard>
+<div class="search-result-column">
+    <MudText Typo="Typo.h5" Class="mb-1">GraphRAG: @GetSearchTitle()</MudText>
+    <MudText Typo="Typo.caption" Class="mb-3" Style="color: #888;">@GetContextCaption()</MudText>
+
+    <div class="markdown-content">
+        @MarkdownRenderer.RenderToHtml(Result.Response)
+    </div>
+
+    @if (Result.ContextData is not null)
+    {
+        <CitationTable ContextData="Result.ContextData" SearchType="Result.Type" />
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// Gets or sets the search result to display.
+    /// </summary>
+    [Parameter]
+    [EditorRequired]
+    public AppSearchResult Result { get; set; } = default!;
+
+    private string GetSearchTitle() => Result.Type switch
+    {
+        SearchType.Basic => "Basic RAG",
+        SearchType.Local => "Local Search",
+        SearchType.Global => "Global Search",
+        SearchType.Drift => "Drift Search",
+        _ => Result.Type.ToString(),
+    };
+
+    private string GetContextCaption() => Result.Type switch
+    {
+        SearchType.Basic => "Answer context: Fixed number of text chunks of raw documents",
+        SearchType.Local => "Answer context: Graph index query results with relevant document text chunks",
+        SearchType.Global => "Answer context: AI-generated network reports covering all input documents",
+        SearchType.Drift => "Answer context: Includes community information",
+        _ => string.Empty,
+    };
+}

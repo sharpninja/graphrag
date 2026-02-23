@@ -1,21 +1,98 @@
-/* GraphRAG Search App custom styles */
+/* GraphRAG Search App — matches Python Streamlit UI styling */
 html, body {
     font-family: 'Roboto', sans-serif;
 }
 
-.search-result-card {
-    margin-bottom: 16px;
+/* Tab bar — red active/inactive matching Python TabBar */
+.graphrag-tabs .mud-tab.mud-tab-active {
+    color: #ff4b4b !important;
 }
 
-.stat-chip {
-    margin-right: 4px;
+.graphrag-tabs .mud-tab {
+    color: #fc9e9e;
+    font-weight: 500;
 }
 
-.community-detail-content {
-    max-height: 70vh;
-    overflow-y: auto;
+.graphrag-tabs .mud-tabs-toolbar {
+    border-bottom: 1px solid #eee;
 }
 
+.graphrag-tabs .mud-tab-slider {
+    background-color: #ff4b4b !important;
+}
+
+/* Question table — matches Python dataframe appearance */
+.question-table {
+    max-width: 100%;
+}
+
+.question-table thead th {
+    background-color: #fafafa;
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: #666;
+}
+
+.question-table tbody tr:hover {
+    background-color: #f5f5f5;
+}
+
+/* Search result columns */
+.search-result-column {
+    padding: 8px 12px;
+}
+
+/* Citation table — matches Python render_html_table() exactly */
+.citation-table-container {
+    max-width: 100%;
+    overflow: hidden;
+    margin: 0 auto;
+}
+
+.citation-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 0.85rem;
+}
+
+.citation-table th,
+.citation-table td {
+    white-space: normal;
+    word-wrap: break-word;
+    border: 1px solid #efefef;
+    padding: 6px 8px;
+    text-align: left;
+}
+
+.citation-table th {
+    background-color: #fafafa;
+    font-weight: 600;
+}
+
+/* Report list table */
+.report-list-table thead th {
+    background-color: #fafafa;
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: #666;
+}
+
+.report-list-table tbody tr:hover {
+    background-color: #f5f5f5;
+}
+
+/* Selected item in community report list */
+.mud-selected-item {
+    background-color: #fff3f3 !important;
+}
+
+/* Cursor pointer helper */
+.cursor-pointer {
+    cursor: pointer;
+}
+
+/* Markdown content */
 .markdown-content h1,
 .markdown-content h2,
 .markdown-content h3 {

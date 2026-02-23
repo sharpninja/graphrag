@@ -1,59 +1,11 @@
+@* Community Explorer is now a tab within the main Search page *@
 @page "/communities"
-@inject AppStateViewModel AppState
-@inject CommunityExplorerViewModel ExplorerVm
+@inject NavigationManager Nav
 
-<PageTitle>Community Explorer - GraphRAG</PageTitle>
-
-<MudGrid>
-    <MudItem xs="12" md="5">
-        <MudPaper Class="pa-4" Elevation="1" Style="height: calc(100vh - 120px); overflow-y: auto;">
-            <MudText Typo="Typo.h6" Class="mb-3">Community Reports</MudText>
-
-            <MudSelect T="int?"
-                       Value="@ExplorerVm.FilterLevel"
-                       ValueChanged="OnFilterChanged"
-                       Label="Community Level"
-                       Variant="Variant.Outlined"
-                       Clearable="true"
-                       Dense="true"
-                       Class="mb-4">
-                @foreach (var level in GetCommunityLevels())
-                {
-                    <MudSelectItem T="int?" Value="@level">Level @level</MudSelectItem>
-                }
-            </MudSelect>
-
-            <MudList T="GraphRag.DataModel.CommunityReport" Dense="true" SelectedValueChanged="OnReportSelected">
-                @foreach (var report in ExplorerVm.GetFilteredReports())
-                {
-                    <MudListItem T="GraphRag.DataModel.CommunityReport" Value="@report">
-                        <div class="d-flex justify-space-between align-center">
-                            <MudText Typo="Typo.body2">@report.Title</MudText>
-                            <MudChip T="string" Size="Size.Small" Color="Color.Secondary">@report.CommunityId</MudChip>
-                        </div>
-                    </MudListItem>
-                }
-            </MudList>
-
-            @if (ExplorerVm.Reports.Count == 0)
-            {
-                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-4">
-                    No community reports loaded. Select a dataset from the sidebar.
-                </MudText>
-            }
-        </MudPaper>
-    </MudItem>
-
-    <MudItem xs="12" md="7">
-        @if (ExplorerVm.SelectedReport is not null)
-        {
-            <ReportDetails Report="ExplorerVm.SelectedReport" />
-        }
-        else
-        {
-            <MudPaper Class="pa-8 d-flex justify-center align-center" Elevation="1" Style="height: calc(100vh - 120px);">
-                <MudText Typo="Typo.h6" Color="Color.Secondary">Select a report to view details</MudText>
-            </MudPaper>
-        }
-    </MudItem>
-</MudGrid>
+@code {
+    /// <inheritdoc />
+    protected override void OnInitialized()
+    {
+        Nav.NavigateTo("/", replace: true);
+    }
+}

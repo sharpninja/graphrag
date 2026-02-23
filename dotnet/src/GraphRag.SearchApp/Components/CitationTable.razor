@@ -1,0 +1,88 @@
+@* Citation table component — matches Python render_html_table() styling *@
+
+@if (_sections.Count > 0)
+{
+    <MudDivider Class="my-3" />
+    <MudText Typo="Typo.h6" Class="mb-2">Citations</MudText>
+
+    @foreach (var citationGroup in _sections)
+    {
+        <MudText Typo="Typo.body2" Class="mb-1">
+            <b>@citationGroup.Label (@citationGroup.Items.Count):</b>
+        </MudText>
+        <div class="citation-table-container mb-3">
+            <table class="citation-table">
+                <thead>
+                    <tr>
+                        @foreach (var header in citationGroup.Headers)
+                        {
+                            <th>@header</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in citationGroup.Items)
+                    {
+                        <tr id="@row.AnchorId">
+                            @foreach (var cell in row.Cells)
+                            {
+                                <td title="@cell">@Truncate(cell, ShortWords)</td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+@code {
+    private const int ShortWords = 12;
+
+    /// <summary>
+    /// Gets or sets the context data from search results.
+    /// </summary>
+    [Parameter]
+    public object? ContextData { get; set; }
+
+    /// <summary>
+    /// Gets or sets the search type for context-specific rendering.
+    /// </summary>
+    [Parameter]
+    public SearchType SearchType { get; set; }
+
+    private List<CitationSection> _sections = [];
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        _sections = ParseContextData();
+    }
+
+    private List<CitationSection> ParseContextData()
+    {
+        // Placeholder — in full implementation, parses ContextData dict
+        // from search results into structured citation sections
+        return [];
+    }
+
+    private static string Truncate(string text, int maxWords)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return string.Empty;
+        }
+
+        var words = text.Split(' ');
+        if (words.Length <= maxWords)
+        {
+            return text;
+        }
+
+        return string.Join(' ', words.Take(maxWords)) + "...";
+    }
+
+    private sealed record CitationSection(string Label, string[] Headers, List<CitationRow> Items);
+
+    private sealed record CitationRow(string AnchorId, string[] Cells);
+}

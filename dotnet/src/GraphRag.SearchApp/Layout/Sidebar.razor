@@ -1,22 +1,12 @@
 @inject AppStateViewModel AppState
 
-<MudNavMenu>
-    <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Search">
-        Search
-    </MudNavLink>
-    <MudNavLink Href="/communities" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Groups">
-        Community Explorer
-    </MudNavLink>
-</MudNavMenu>
+<div class="px-4 pt-4">
+    <MudText Typo="Typo.subtitle2" Class="mb-3" Style="font-weight: 600;">Options</MudText>
 
-<MudDivider Class="my-4" />
-
-<div class="px-4">
-    <MudText Typo="Typo.subtitle2" Class="mb-2">Dataset</MudText>
     <MudSelect T="string"
                Value="@AppState.DatasetKey"
                ValueChanged="OnDatasetChanged"
-               Label="Select Dataset"
+               Label="Dataset"
                Variant="Variant.Outlined"
                Dense="true"
                Class="mb-4">
@@ -26,17 +16,17 @@
         }
     </MudSelect>
 
-    <MudText Typo="Typo.subtitle2" Class="mb-2">Search Types</MudText>
-    <MudSwitch @bind-Value="AppState.IncludeGlobalSearch" Label="Global" Color="Color.Primary" />
-    <MudSwitch @bind-Value="AppState.IncludeLocalSearch" Label="Local" Color="Color.Secondary" />
-    <MudSwitch @bind-Value="AppState.IncludeDriftSearch" Label="DRIFT" Color="Color.Tertiary" />
-    <MudSwitch @bind-Value="AppState.IncludeBasicRag" Label="Basic RAG" Color="Color.Info" />
-
-    <MudDivider Class="my-4" />
-
     <MudNumericField @bind-Value="AppState.SuggestedQuestionsCount"
-                     Label="Suggested Questions"
+                     Label="Number of suggested questions"
                      Variant="Variant.Outlined"
-                     Min="1" Max="20"
+                     Min="1" Max="100" Step="1"
                      Class="mb-4" />
+
+    <MudDivider Class="my-2" />
+
+    <MudText Typo="Typo.subtitle2" Class="mb-2" Style="font-weight: 600;">Search options:</MudText>
+    <MudSwitch @bind-Value="AppState.IncludeBasicRag" Label="Include basic RAG" Color="Color.Primary" />
+    <MudSwitch @bind-Value="AppState.IncludeLocalSearch" Label="Include local search" Color="Color.Primary" />
+    <MudSwitch @bind-Value="AppState.IncludeGlobalSearch" Label="Include global search" Color="Color.Primary" />
+    <MudSwitch @bind-Value="AppState.IncludeDriftSearch" Label="Include drift search" Color="Color.Primary" />
 </div>
