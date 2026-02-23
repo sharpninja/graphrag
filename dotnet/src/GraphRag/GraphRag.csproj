@@ -17,6 +17,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Prompts\*.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="System.CommandLine" />
     <PackageReference Include="Spectre.Console" />
     <PackageReference Include="QuikGraph" />
