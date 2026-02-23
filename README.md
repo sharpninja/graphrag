@@ -36,6 +36,7 @@ To learn more about GraphRAG and how it can be used to enhance your LLM's abilit
 | **CLI** | `graphrag` (via pip) | `dotnet run --project src/GraphRag` |
 | **Tests** | pytest (unit, integration, smoke) | xUnit (200 tests — unit + integration) |
 | **Getting Started** | [Python Quickstart](https://microsoft.github.io/graphrag/get_started/) | [.NET Getting Started](dotnet/docs/getting-started.md) |
+| **Search UI** | `unified-search-app/` (Streamlit) | `GraphRag.SearchApp` (Blazor) — [Getting Started](dotnet/docs/search-app-getting-started.md) |
 
 ## Quickstart
 
@@ -79,7 +80,7 @@ graphrag/
 │   ├── graphrag-llm/       ← LLM abstraction
 │   └── graphrag-vectors/   ← Vector stores
 ├── dotnet/                 ← .NET 10 implementation
-│   ├── src/                ← 8 core libraries + 15 strategy plugins
+│   ├── src/                ← 8 core libraries + 15 strategy plugins + SearchApp
 │   ├── tests/              ← Unit + integration tests
 │   └── docs/               ← .NET-specific documentation
 ├── docs/                   ← MkDocs documentation site (Python-focused)
@@ -98,6 +99,7 @@ This repository presents a methodology for using knowledge graph memory structur
 - To learn about our contribution guidelines, see [CONTRIBUTING.md](./CONTRIBUTING.md)
 - To start developing the Python implementation, see [DEVELOPING.md](./DEVELOPING.md)
 - For .NET development, see the [.NET Getting Started Guide](dotnet/docs/getting-started.md) and [.NET Project Overview](dotnet/docs/project-overview.md)
+- For the .NET Search App, see the [Search App Getting Started Guide](dotnet/docs/search-app-getting-started.md)
 - Join the conversation and provide feedback in the [GitHub Discussions tab!](https://github.com/microsoft/graphrag/discussions)
 
 ## Prompt Tuning

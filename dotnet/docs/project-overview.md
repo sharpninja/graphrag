@@ -394,6 +394,8 @@ System.CommandLine subcommands: `init`, `index`, `query`, `prompt-tune` via `Roo
 | **NuGet** | MudBlazor 8.5.0, Markdig 0.38.0, Parquet.Net 5.3.0, Azure.Identity, Azure.Storage.Blobs |
 | **Role** | Interactive web UI for searching and exploring GraphRAG indexed data |
 
+> **📖 Full setup guide**: [Search App Getting Started](search-app-getting-started.md)
+
 ### Purpose
 A .NET port of the Python/Streamlit `unified-search-app`. Provides:
 - **Search page**: Run Global, Local, DRIFT, and Basic RAG searches in parallel with Markdown-rendered results and stats

@@ -684,14 +684,15 @@ IStorage storage = factory.Create("file", new Dictionary<string, object?>
 
 The **GraphRag.SearchApp** is a Blazor Server web application that provides an interactive UI for searching and exploring your GraphRAG indexed data. It is the .NET equivalent of the Python/Streamlit `unified-search-app`.
 
-### Running the Search App
+> **📖 Full guide**: See the dedicated [Search App Getting Started Guide](search-app-getting-started.md) for complete setup, configuration, data preparation, and usage instructions.
+
+### Quick Start
 
 ```bash
 cd dotnet/src/GraphRag.SearchApp
 dotnet run
+# Open https://localhost:5001
 ```
-
-The app launches at `https://localhost:5001` by default.
 
 ### Configuration
 
