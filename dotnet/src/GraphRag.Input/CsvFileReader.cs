@@ -2,10 +2,6 @@
 // Licensed under the MIT License
 
 using System.Globalization;
-using System.IO;
-
-using CsvHelper;
-using CsvHelper.Configuration;
 
 using GraphRag.Storage;
 
@@ -13,6 +9,8 @@ namespace GraphRag.Input;
 
 /// <summary>
 /// Reads CSV files from storage and produces <see cref="TextDocument"/> instances.
+/// Uses a simple built-in CSV parser. For robust CSV parsing (quoted fields,
+/// escaping, multi-line values), use the GraphRag.Input.CsvHelper strategy library.
 /// </summary>
 public class CsvFileReader : StructuredFileReader
 {
@@ -50,31 +48,84 @@ public class CsvFileReader : StructuredFileReader
         }
 
         var rows = new List<Dictionary<string, object?>>();
-        var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-        {
-            HasHeaderRecord = true,
-        };
-
         using var reader = new StringReader(content);
-        using var csv = new CsvReader(reader, config);
 
-        await csv.ReadAsync().ConfigureAwait(false);
-        csv.ReadHeader();
-        var headers = csv.HeaderRecord ?? [];
+        // Read header line.
+        var headerLine = await reader.ReadLineAsync(ct).ConfigureAwait(false);
+        if (headerLine is null)
+        {
+            return rows;
+        }
 
-        while (await csv.ReadAsync().ConfigureAwait(false))
+        var headers = ParseCsvLine(headerLine);
+
+        // Read data lines.
+        string? line;
+        while ((line = await reader.ReadLineAsync(ct).ConfigureAwait(false)) is not null)
         {
             ct.ThrowIfCancellationRequested();
-
-            var row = new Dictionary<string, object?>();
-            foreach (var header in headers)
+            if (string.IsNullOrWhiteSpace(line))
             {
-                row[header] = csv.GetField(header);
+                continue;
+            }
+
+            var fields = ParseCsvLine(line);
+            var row = new Dictionary<string, object?>();
+            for (var i = 0; i < headers.Length; i++)
+            {
+                row[headers[i]] = i < fields.Length ? fields[i] : null;
             }
 
             rows.Add(row);
         }
 
         return rows;
+    }
+
+    private static string[] ParseCsvLine(string line)
+    {
+        var fields = new List<string>();
+        var inQuotes = false;
+        var field = new System.Text.StringBuilder();
+
+        for (var i = 0; i < line.Length; i++)
+        {
+            var c = line[i];
+            if (inQuotes)
+            {
+                if (c == '"')
+                {
+                    if (i + 1 < line.Length && line[i + 1] == '"')
+                    {
+                        field.Append('"');
+                        i++;
+                    }
+                    else
+                    {
+                        inQuotes = false;
+                    }
+                }
+                else
+                {
+                    field.Append(c);
+                }
+            }
+            else if (c == '"')
+            {
+                inQuotes = true;
+            }
+            else if (c == ',')
+            {
+                fields.Add(field.ToString());
+                field.Clear();
+            }
+            else
+            {
+                field.Append(c);
+            }
+        }
+
+        fields.Add(field.ToString());
+        return fields.ToArray();
     }
 }

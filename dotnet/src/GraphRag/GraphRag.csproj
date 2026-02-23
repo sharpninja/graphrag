@@ -23,8 +23,7 @@
   <ItemGroup>
     <PackageReference Include="System.CommandLine" />
     <PackageReference Include="Spectre.Console" />
-    <PackageReference Include="QuikGraph" />
-    <PackageReference Include="Catalyst" />
+
     <PackageReference Include="FluentValidation" />
     <PackageReference Include="Microsoft.Extensions.Configuration" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />

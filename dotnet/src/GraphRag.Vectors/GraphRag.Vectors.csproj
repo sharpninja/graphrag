@@ -8,12 +8,6 @@
     <ProjectReference Include="..\GraphRag.Common\GraphRag.Common.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Azure.Search.Documents" />
-    <PackageReference Include="Azure.Identity" />
-    <PackageReference Include="Microsoft.Azure.Cosmos" />
-    <PackageReference Include="Newtonsoft.Json" />
-    <PackageReference Include="MathNet.Numerics" />
-  </ItemGroup>
+
 
 </Project>

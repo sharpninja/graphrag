@@ -9,10 +9,6 @@
     <ProjectReference Include="..\GraphRag.Storage\GraphRag.Storage.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="CsvHelper" />
-    <PackageReference Include="Markdig" />
-    <PackageReference Include="DocumentFormat.OpenXml" />
-  </ItemGroup>
+
 
 </Project>

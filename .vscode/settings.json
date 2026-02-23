@@ -3,7 +3,7 @@
   "explorer.fileNesting.enabled": true,
   "debug.internalConsoleOptions": "neverOpen",
   "python.defaultInterpreterPath": "${workspaceRoot}/.venv/bin/python",
-  "python.languageServer": "Pylance",
+  "python.languageServer": "None",
   "cSpell.customDictionaries": {
     "project-words": {
       "name": "project-words",
