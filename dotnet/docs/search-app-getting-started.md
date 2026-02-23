@@ -8,15 +8,17 @@ A step-by-step guide to setting up, configuring, and running the **GraphRAG Blaz
 
 1. [Overview](#overview)
 2. [Prerequisites](#prerequisites)
-3. [Build & Run](#build--run)
-4. [Docker](#docker)
-5. [Preparing Your Data](#preparing-your-data)
-6. [Configuration Reference](#configuration-reference)
-7. [Using the App](#using-the-app)
-8. [Data Sources](#data-sources)
-9. [Architecture](#architecture)
-10. [Extending the App](#extending-the-app)
-11. [Troubleshooting](#troubleshooting)
+3. [Quick Start with Demo Data](#quick-start-with-demo-data)
+4. [Build & Run](#build--run)
+5. [Docker](#docker)
+6. [Preparing Your Data](#preparing-your-data)
+7. [Seed Data Reference](#seed-data-reference)
+8. [Configuration Reference](#configuration-reference)
+9. [Using the App](#using-the-app)
+10. [Data Sources](#data-sources)
+11. [Architecture](#architecture)
+12. [Extending the App](#extending-the-app)
+13. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -60,6 +62,70 @@ dotnet --version
 ```
 
 > **Note:** You do _not_ need Azure OpenAI credentials to browse already-indexed data in the Community Explorer. You _do_ need a configured LLM to run live searches.
+
+---
+
+## Quick Start with Demo Data
+
+The fastest way to explore the SearchApp is with the built-in **"A Christmas Carol"** demo dataset. No GraphRAG indexing run or LLM keys are needed — the app ships with a seed data generator that creates Parquet files you can browse immediately in the Community Explorer.
+
+### Option A: Docker (Recommended)
+
+```bash
+cd dotnet
+docker build -f src/GraphRag.SearchApp/Dockerfile -t graphrag-search-app .
+docker run -d --name graphrag-search -p 8080:8080 graphrag-search-app
+```
+
+Open `http://localhost:8080`. The container automatically seeds demo data on first startup if no existing dataset is found. You'll see **"A Christmas Carol"** in the dataset dropdown.
+
+### Option B: Local .NET
+
+```bash
+cd dotnet/src/GraphRag.SearchApp
+
+# Seed the demo data into ./output
+dotnet run -- --seed
+
+# Now run the app (it reads from ./output)
+dotnet run
+```
+
+Or seed and run in one step:
+
+```bash
+dotnet run -- --seed --run
+```
+
+Open `https://localhost:5001` (or `http://localhost:5000`).
+
+### What You Get
+
+The demo dataset contains data from Charles Dickens' *A Christmas Carol*, pre-indexed into the GraphRAG format:
+
+| Table | Count | Examples |
+|-------|-------|----------|
+| **Entities** | 8 | Ebenezer Scrooge, Bob Cratchit, Tiny Tim, Jacob Marley, Ghost of Christmas Past/Present/Yet to Come, Fred |
+| **Relationships** | 10 | Scrooge → Cratchit (employer), Marley → Scrooge (warns), Cratchit → Tiny Tim (father), Ghost of Christmas Present → Scrooge (guides) |
+| **Communities** | 2 | "Scrooge's Transformation" (5 members), "The Cratchit Family" (3 members) |
+| **Community Reports** | 2 | Scrooge's Redemption Arc (rank 9.5), The Cratchit Family Hardship (rank 8.0) |
+| **Text Units** | 5 | Source passages including *"Marley was dead: to begin with…"*, *"Bah! Humbug!"*, *"God bless us every one!"* |
+
+### Try It Out
+
+Once the app is running with demo data:
+
+1. **Community Explorer tab** — Select "A Christmas Carol" from the dataset dropdown, then browse the two community reports:
+   - *Scrooge's Redemption Arc* — covers the supernatural intervention, journey through time, and Scrooge's transformation
+   - *The Cratchit Family Hardship* — covers the family's resilience, Tiny Tim's illness, and Bob's loyalty
+
+2. **Search tab** — Try sample queries against the demo data (requires LLM configuration):
+   - `"What is the relationship between Scrooge and Tiny Tim?"`
+   - `"How does Jacob Marley influence Scrooge's transformation?"`
+   - `"What role do the three ghosts play in the story?"`
+   - `"Describe the Cratchit family's Christmas celebration"`
+
+> **Note:** Live search queries require an LLM endpoint. Without one, you can still explore Community Reports and browse entities/relationships in the dataset.
 
 ---
 
@@ -125,14 +191,19 @@ The simplest way to run the app in Docker:
 ```bash
 cd dotnet/src/GraphRag.SearchApp
 
-# Place your indexed data in ./output/ (or change the volume mount)
-mkdir -p output
-
-# Build and start
+# Build and start — demo data is seeded automatically on first run
 docker compose up --build
 ```
 
-The app is available at `http://localhost:8080`.
+The app is available at `http://localhost:8080`. On first startup, the container detects that no `listing.json` exists and automatically seeds the **"A Christmas Carol"** demo dataset. Subsequent restarts skip seeding.
+
+To bring your own data instead, place your indexed output in `./output/` before starting:
+
+```bash
+# Place your indexed data (overrides auto-seeding)
+cp -r /path/to/your/graphrag-output/* ./output/
+docker compose up --build
+```
 
 ### Build the Image Directly
 
@@ -193,9 +264,10 @@ Customize by uncommenting the Azure Blob environment variables or changing the v
 | **Base image** | `mcr.microsoft.com/oryx/python:3.11` | `mcr.microsoft.com/dotnet/aspnet:10.0-preview` |
 | **Build** | Single-stage (uv sync) | Multi-stage (restore → publish → runtime) |
 | **Port** | 8501 (Streamlit) | 8080 (Kestrel) |
-| **Entry point** | `uv run poe start_prod` | `dotnet GraphRag.SearchApp.dll` |
+| **Entry point** | `uv run poe start_prod` | `docker-entrypoint.sh` (auto-seeds, then runs app) |
 | **Data mount** | N/A (env vars) | `/data/output` volume |
 | **Non-root user** | No | Yes (`appuser`) |
+| **Demo data** | No built-in seed | Auto-seeds "A Christmas Carol" on first run |
 
 ---
 
@@ -206,39 +278,89 @@ The Search App reads data produced by a GraphRAG indexing run. You need:
 1. **Indexed output files** — Parquet files generated by `graphrag index`
 2. **A listing file** — JSON file describing available datasets
 
+> **Tip:** If you just want to explore the app, use the built-in seed data instead (see [Quick Start with Demo Data](#quick-start-with-demo-data)). The instructions below are for loading your own indexed data.
+
 ### Expected Output Files
 
 After running `graphrag index`, your output directory should contain:
 
 ```
 output/
-├── entities.parquet             # Extracted entities
-├── relationships.parquet        # Entity relationships
-├── communities.parquet          # Detected communities
-├── community_reports.parquet    # Generated community reports
-├── text_units.parquet           # Source text chunks
+├── entities.parquet             # Extracted entities (name, type, description, rank)
+├── relationships.parquet        # Entity relationships (source, target, weight, description)
+├── communities.parquet          # Detected communities (title, level, size)
+├── community_reports.parquet    # Generated community reports (summary, full_content, rank)
+├── text_units.parquet           # Source text chunks (text, n_tokens, document_id)
 └── covariates.parquet           # (optional) Extracted covariates
 ```
 
+For reference, the built-in seed data creates files with the following schemas:
+
+**entities.parquet** columns:
+| Column | Type | Example |
+|--------|------|---------|
+| `id` | string | `"e-0"` |
+| `short_id` | string | `"0"` |
+| `title` | string | `"EBENEZER SCROOGE"` |
+| `type` | string | `"PERSON"` |
+| `description` | string | `"Ebenezer Scrooge is a miserly London businessman…"` |
+| `rank` | int | `10` |
+
+**relationships.parquet** columns:
+| Column | Type | Example |
+|--------|------|---------|
+| `id` | string | `"r-0"` |
+| `short_id` | string | `"0"` |
+| `source` | string | `"EBENEZER SCROOGE"` |
+| `target` | string | `"BOB CRATCHIT"` |
+| `weight` | double | `8.0` |
+| `description` | string | `"Scrooge employs Cratchit as his clerk…"` |
+
+**community_reports.parquet** columns:
+| Column | Type | Example |
+|--------|------|---------|
+| `id` | string | `"cr-0"` |
+| `short_id` | string | `"0"` |
+| `title` | string | `"Scrooge's Redemption Arc"` |
+| `community_id` | string | `"0"` |
+| `summary` | string | `"This community centers on Ebenezer Scrooge…"` |
+| `full_content` | string | Full Markdown report |
+| `rank` | double | `9.5` |
+| `size` | int | `5` |
+
 ### Create a Dataset Listing File
 
-Create a `listing.json` file in your data root directory:
+Create a `listing.json` file in your data root directory. Here is the listing file the seed data creates:
 
 ```json
 [
   {
-    "key": "my-dataset",
-    "path": "my-dataset/output",
-    "name": "My Dataset",
-    "description": "Knowledge graph built from my documents",
-    "communityLevel": 0
+    "key": "christmas-carol",
+    "path": "christmas-carol",
+    "name": "A Christmas Carol",
+    "description": "GraphRAG index of Charles Dickens' A Christmas Carol — demo dataset for the SearchApp.",
+    "communityLevel": 1
+  }
+]
+```
+
+For multiple datasets, add additional entries:
+
+```json
+[
+  {
+    "key": "christmas-carol",
+    "path": "christmas-carol",
+    "name": "A Christmas Carol",
+    "description": "GraphRAG index of Charles Dickens' A Christmas Carol — demo dataset for the SearchApp.",
+    "communityLevel": 1
   },
   {
-    "key": "another-dataset",
-    "path": "another-dataset/output",
-    "name": "Another Dataset",
-    "description": "A second indexed dataset",
-    "communityLevel": 2
+    "key": "my-corpus",
+    "path": "my-corpus/output",
+    "name": "My Research Corpus",
+    "description": "Knowledge graph built from research papers",
+    "communityLevel": 0
   }
 ]
 ```
@@ -255,21 +377,141 @@ Each entry has:
 
 ### Example Directory Layout
 
+This is the exact layout produced by the seed data generator:
+
+```
+./output/                          ← DataRoot
+├── listing.json                   ← Dataset listing (256 bytes)
+└── christmas-carol/
+    └── output/
+        ├── entities.parquet       ← 8 entities (3.5 KB)
+        ├── relationships.parquet  ← 10 relationships (2.6 KB)
+        ├── communities.parquet    ← 2 communities (1.1 KB)
+        ├── community_reports.parquet ← 2 reports (13.9 KB)
+        └── text_units.parquet     ← 5 text units (4.0 KB)
+```
+
+For your own datasets, replicate this structure:
+
 ```
 ./output/                          ← DataRoot
 ├── listing.json                   ← Dataset listing
-├── my-dataset/
+├── christmas-carol/               ← Seed data (auto-generated)
 │   └── output/
 │       ├── entities.parquet
-│       ├── relationships.parquet
-│       ├── communities.parquet
-│       ├── community_reports.parquet
-│       └── text_units.parquet
-└── another-dataset/
+│       └── ...
+└── my-corpus/                     ← Your own indexed data
     └── output/
         ├── entities.parquet
-        └── ...
+        ├── relationships.parquet
+        ├── communities.parquet
+        ├── community_reports.parquet
+        └── text_units.parquet
 ```
+
+---
+
+## Seed Data Reference
+
+The built-in seed data generator (`SeedDataService`) creates a complete demo dataset that exercises all features of the SearchApp without requiring an external GraphRAG indexing run.
+
+### CLI Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `--seed` | Generate demo data in `DataRoot`. Exits after seeding unless `--run` is also specified. |
+| `--force` | Overwrite existing seed data (use with `--seed`). |
+| `--run` | Continue running the app after seeding (use with `--seed`). |
+
+**Examples:**
+
+```bash
+# Seed only (creates files and exits)
+dotnet run -- --seed
+
+# Seed and start the app
+dotnet run -- --seed --run
+
+# Force re-seed (overwrites existing demo data) and start
+dotnet run -- --seed --force --run
+
+# Seed to a custom location
+SearchApp__DataRoot=/tmp/demo dotnet run -- --seed
+```
+
+### Docker Auto-Seed Behavior
+
+The Docker image uses `docker-entrypoint.sh` which implements automatic seeding:
+
+1. On container start, checks if `$DATA_ROOT/listing.json` exists
+2. If **missing** → runs `dotnet GraphRag.SearchApp.dll --seed --run` (seeds, then starts app)
+3. If **present** → runs `dotnet GraphRag.SearchApp.dll` (starts app directly)
+
+This means:
+- **First run** with an empty `/data/output` volume → demo data is auto-created
+- **Subsequent runs** → existing data is preserved, no re-seeding
+- **With your own data** → mount a volume containing `listing.json` to skip seeding
+
+```bash
+# Auto-seed (first run with empty volume)
+docker run -d -p 8080:8080 graphrag-search-app
+
+# Skip seeding (provide your own data)
+docker run -d -p 8080:8080 -v /my/data:/data/output:ro graphrag-search-app
+
+# Force re-seed inside a running container
+docker exec graphrag-search dotnet GraphRag.SearchApp.dll --seed --force
+```
+
+### Demo Dataset: A Christmas Carol
+
+The seed data is drawn from Charles Dickens' *A Christmas Carol*, chosen because it's a well-known, public-domain text with clear entity relationships and community structure.
+
+#### Entities (8)
+
+| Title | Type | Rank | Description |
+|-------|------|------|-------------|
+| **EBENEZER SCROOGE** | PERSON | 10 | Miserly London businessman who undergoes a dramatic moral transformation through supernatural visitation |
+| **BOB CRATCHIT** | PERSON | 7 | Scrooge's loyal, underpaid clerk who maintains a loving household despite poverty |
+| **TINY TIM** | PERSON | 8 | Cratchit's youngest son, a sickly child whose potential death catalyzes Scrooge's change |
+| **JACOB MARLEY** | PERSON | 6 | Scrooge's deceased partner whose ghost warns him of the consequences of greed |
+| **GHOST OF CHRISTMAS PAST** | ENTITY | 5 | First spirit, shows scenes from Scrooge's earlier life |
+| **GHOST OF CHRISTMAS PRESENT** | ENTITY | 5 | Second spirit, reveals current Christmas celebrations including the Cratchits |
+| **GHOST OF CHRISTMAS YET TO COME** | ENTITY | 5 | Third spirit, shows visions of a grim future |
+| **FRED** | PERSON | 4 | Scrooge's cheerful nephew who persistently invites him to Christmas dinner |
+
+#### Relationships (10)
+
+| Source → Target | Weight | Description |
+|-----------------|--------|-------------|
+| Scrooge → Bob Cratchit | 8.0 | Employer/clerk — Scrooge treats Cratchit poorly |
+| Scrooge → Jacob Marley | 9.0 | Former business partners — Marley's ghost warns Scrooge |
+| Bob Cratchit → Tiny Tim | 10.0 | Father/son — Tim is Cratchit's beloved youngest |
+| Jacob Marley → Scrooge | 9.0 | Marley's ghost initiates Scrooge's transformation |
+| Ghost of Christmas Past → Scrooge | 7.0 | Takes Scrooge through earlier memories |
+| Ghost of Christmas Present → Scrooge | 7.0 | Shows Scrooge how others celebrate the holiday |
+| Ghost of Christmas Yet to Come → Scrooge | 8.0 | Reveals a dark future if Scrooge doesn't change |
+| Scrooge → Fred | 5.0 | Uncle/nephew — Fred invites Scrooge to dinner |
+| Ghost of Christmas Present → Tiny Tim | 6.0 | Shows Scrooge the Cratchit family and Tim's condition |
+| Scrooge → Tiny Tim | 7.0 | Scrooge becomes deeply moved by Tim's plight |
+
+#### Community Reports (2)
+
+**"Scrooge's Redemption Arc"** (community 0, rank 9.5, 5 members)
+> Centers on Ebenezer Scrooge and the supernatural forces that drive his transformation. Key findings: supernatural intervention via Marley's ghost, journey through time with three spirits, the pivotal moment of Tiny Tim's empty chair, and Scrooge's complete transformation by Christmas morning.
+
+**"The Cratchit Family Hardship"** (community 1, rank 8.0, 3 members)
+> Revolves around the Cratchit family's poverty and resilience. Key findings: the family celebrates Christmas with genuine joy despite hardship, Tiny Tim's illness creates narrative urgency, Bob remains loyal to Scrooge despite harsh conditions, and the family's circumstances serve as the primary emotional catalyst for Scrooge's redemption.
+
+#### Text Units (5)
+
+| # | Source Passage | Tokens |
+|---|----------------|--------|
+| 0 | *"Marley was dead: to begin with. There is no doubt whatever about that…"* | 68 |
+| 1 | *"Oh! But he was a tight-fisted hand at the grindstone, Scrooge! a squeezing, wrenching, grasping…"* | 52 |
+| 2 | *"'A merry Christmas, uncle! God save you!' cried a cheerful voice… 'Bah!' said Scrooge, 'Humbug!'"* | 53 |
+| 3 | *"Bob Cratchit's fire was so very much smaller that it looked like one coal…"* | 47 |
+| 4 | *"'God bless us every one!' said Tiny Tim, the last of all…"* | 52 |
 
 ---
 
@@ -346,17 +588,24 @@ $env:SearchApp__BlobAccountName = "mystorageaccount"
 
 The Search page is the home page of the application.
 
-1. **Select a dataset** from the sidebar dropdown
+1. **Select a dataset** from the sidebar dropdown (e.g., "A Christmas Carol" from the demo data)
 2. **Choose search types** using the sidebar toggles:
    - **Global** (on by default) — Community-based global search
    - **Local** (on by default) — Local context search using entity neighborhoods
    - **DRIFT** (off by default) — Dynamic retrieval with iterative feedback
    - **Basic RAG** (off by default) — Traditional vector-similarity search
-3. **Type your question** in the search bar and press Enter or click Search
+3. **Type your question** in the search bar and press Enter
 4. **View results** — Each enabled search type runs in parallel and displays in its own card with:
    - Markdown-rendered LLM response
    - Performance stats: completion time, LLM calls, token usage
    - Search type icon and label
+
+**Example queries** for the Christmas Carol demo dataset:
+- `"What is the relationship between Scrooge and Tiny Tim?"`
+- `"How does Jacob Marley influence Scrooge's transformation?"`
+- `"What role do the three ghosts play in the story?"`
+- `"Describe the Cratchit family's Christmas celebration"`
+- `"Why does Scrooge change his ways?"`
 
 **Suggested Questions**: When available, clickable question chips appear above the results. Click any chip to auto-fill and execute that question.
 
@@ -367,10 +616,11 @@ The Community Explorer provides a split-panel view for browsing community report
 1. **Left panel** — Scrollable list of community reports
    - **Filter by level** using the dropdown at the top
    - Click any report to select it
+   - With demo data, you'll see "Scrooge's Redemption Arc" and "The Cratchit Family Hardship"
 2. **Right panel** — Full detail view of the selected report showing:
    - Title, community ID, rank, and size
    - Summary text
-   - Full Markdown-rendered report content
+   - Full Markdown-rendered report content with headers, numbered findings, and bold key terms
 
 ### Sidebar
 
@@ -455,6 +705,7 @@ dotnet/src/GraphRag.SearchApp/
 │   ├── DatasetLoader.cs           # Dataset listing & source factory
 │   ├── KnowledgeModelService.cs   # Parallel data model loading
 │   ├── SearchOrchestrator.cs      # Parallel search execution
+│   ├── SeedDataService.cs         # Demo data generator (Christmas Carol)
 │   └── MarkdownRenderer.cs        # Markdig pipeline wrapper
 ├── Layout/
 │   ├── MainLayout.razor           # App shell (AppBar + Drawer + Content)
@@ -477,7 +728,10 @@ dotnet/src/GraphRag.SearchApp/
 ├── wwwroot/
 │   └── css/app.css                # Custom styles
 ├── appsettings.json               # Production config
-└── appsettings.Development.json   # Development overrides
+├── appsettings.Development.json   # Development overrides
+├── docker-entrypoint.sh           # Container startup (auto-seed + run)
+├── Dockerfile                     # Multi-stage Docker build
+└── docker-compose.yml             # Docker Compose config
 ```
 
 ### Dependency Injection
@@ -609,6 +863,9 @@ MudBlazor themes can be configured in `Layout/MainLayout.razor`:
 | **Docker build fails** | Ensure you run `docker build` from the `dotnet/` directory (not `src/GraphRag.SearchApp/`) |
 | **Container can't read data** | Check the volume mount path and permissions; use `:ro` for read-only |
 | **Docker port conflict** | Change the host port: `-p 9090:8080` or update `docker-compose.yml` |
+| **Seed data not appearing** | Ensure `--seed` was passed; check that `DataRoot` matches where seed writes (default `./output`) |
+| **Seed data overwrite** | Use `--seed --force` to regenerate; without `--force`, existing data is preserved |
+| **Container re-seeds every time** | The volume may not be persisted; use a named Docker volume or bind mount |
 
 ### Checking Logs
 
