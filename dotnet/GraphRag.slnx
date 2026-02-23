@@ -3,10 +3,25 @@
     <Project Path="src/GraphRag.Cache/GraphRag.Cache.csproj" />
     <Project Path="src/GraphRag.Chunking/GraphRag.Chunking.csproj" />
     <Project Path="src/GraphRag.Common/GraphRag.Common.csproj" />
+    <Project Path="src/GraphRag.Graph.QuikGraph/GraphRag.Graph.QuikGraph.csproj" />
     <Project Path="src/GraphRag.Input/GraphRag.Input.csproj" />
+    <Project Path="src/GraphRag.Input.CsvHelper/GraphRag.Input.CsvHelper.csproj" />
+    <Project Path="src/GraphRag.Input.Markdig/GraphRag.Input.Markdig.csproj" />
+    <Project Path="src/GraphRag.Input.OpenXml/GraphRag.Input.OpenXml.csproj" />
     <Project Path="src/GraphRag.Llm/GraphRag.Llm.csproj" />
+    <Project Path="src/GraphRag.Llm.AzureOpenAi/GraphRag.Llm.AzureOpenAi.csproj" />
+    <Project Path="src/GraphRag.Llm.Scriban/GraphRag.Llm.Scriban.csproj" />
+    <Project Path="src/GraphRag.Llm.SharpToken/GraphRag.Llm.SharpToken.csproj" />
+    <Project Path="src/GraphRag.Nlp.Catalyst/GraphRag.Nlp.Catalyst.csproj" />
     <Project Path="src/GraphRag.Storage/GraphRag.Storage.csproj" />
+    <Project Path="src/GraphRag.Storage.AzureBlob/GraphRag.Storage.AzureBlob.csproj" />
+    <Project Path="src/GraphRag.Storage.AzureCosmos/GraphRag.Storage.AzureCosmos.csproj" />
+    <Project Path="src/GraphRag.Storage.Csv/GraphRag.Storage.Csv.csproj" />
+    <Project Path="src/GraphRag.Storage.Parquet/GraphRag.Storage.Parquet.csproj" />
     <Project Path="src/GraphRag.Vectors/GraphRag.Vectors.csproj" />
+    <Project Path="src/GraphRag.Vectors.AzureAiSearch/GraphRag.Vectors.AzureAiSearch.csproj" />
+    <Project Path="src/GraphRag.Vectors.AzureCosmos/GraphRag.Vectors.AzureCosmos.csproj" />
+    <Project Path="src/GraphRag.Vectors.LanceDb/GraphRag.Vectors.LanceDb.csproj" />
     <Project Path="src/GraphRag/GraphRag.csproj" />
   </Folder>
   <Folder Name="/tests/">

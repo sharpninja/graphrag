@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>GraphRag.Vectors.LanceDb</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GraphRag.Common\GraphRag.Common.csproj" />
+    <ProjectReference Include="..\GraphRag.Vectors\GraphRag.Vectors.csproj" />
+  </ItemGroup>
+
+</Project>

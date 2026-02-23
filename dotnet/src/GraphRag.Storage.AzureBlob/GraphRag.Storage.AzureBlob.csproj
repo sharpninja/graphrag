@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>GraphRag.Storage.AzureBlob</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GraphRag.Common\GraphRag.Common.csproj" />
+    <ProjectReference Include="..\GraphRag.Storage\GraphRag.Storage.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Storage.Blobs" />
+    <PackageReference Include="Azure.Identity" />
+  </ItemGroup>
+
+</Project>

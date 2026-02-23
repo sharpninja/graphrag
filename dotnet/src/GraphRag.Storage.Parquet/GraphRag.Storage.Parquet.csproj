@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>GraphRag.Storage.Parquet</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GraphRag.Common\GraphRag.Common.csproj" />
+    <ProjectReference Include="..\GraphRag.Storage\GraphRag.Storage.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Parquet.Net" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>GraphRag.Llm.SharpToken</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GraphRag.Common\GraphRag.Common.csproj" />
+    <ProjectReference Include="..\GraphRag.Llm\GraphRag.Llm.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SharpToken" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>GraphRag.Input.Markdig</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GraphRag.Common\GraphRag.Common.csproj" />
+    <ProjectReference Include="..\GraphRag.Input\GraphRag.Input.csproj" />
+    <ProjectReference Include="..\GraphRag.Storage\GraphRag.Storage.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Markdig" />
+  </ItemGroup>
+
+</Project>
