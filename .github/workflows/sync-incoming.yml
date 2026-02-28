@@ -1,0 +1,106 @@
+name: Sync Upstream to Incoming Branch
+
+on:
+  schedule:
+    - cron: '0 6 * * *'  # Daily at 06:00 UTC
+  workflow_dispatch:       # Allow manual triggering
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    outputs:
+      new_commit_shas: ${{ steps.collect.outputs.shas }}
+      has_new: ${{ steps.collect.outputs.has_new }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add upstream remote and fetch
+        run: |
+          git remote add upstream https://github.com/microsoft/graphrag.git
+          git fetch upstream main --no-tags
+
+      - name: Resolve previous incoming HEAD
+        id: prev-head
+        run: |
+          if git ls-remote --heads origin incoming | grep -q 'refs/heads/incoming'; then
+            git fetch origin incoming
+            PREV=$(git rev-parse origin/incoming)
+          else
+            PREV=""
+          fi
+          echo "prev=$PREV" >> "$GITHUB_OUTPUT"
+
+      - name: Collect new upstream commits
+        id: collect
+        run: |
+          PREV="${{ steps.prev-head.outputs.prev }}"
+          if [ -n "$PREV" ]; then
+            # Commits reachable from upstream/main but not from PREV
+            SHAS=$(git log --reverse --format="%H" "${PREV}..upstream/main" -- 2>/dev/null | head -10)
+          else
+            # First sync — only grab the very latest commit so we don't flood the queue
+            SHAS=$(git log --format="%H" -1 upstream/main -- 2>/dev/null)
+          fi
+
+          if [ -z "$SHAS" ]; then
+            echo "has_new=false" >> "$GITHUB_OUTPUT"
+            echo 'shas=[]' >> "$GITHUB_OUTPUT"
+          else
+            SHAS_JSON=$(echo "$SHAS" | jq -R . | jq -sc .)
+            echo "has_new=true"  >> "$GITHUB_OUTPUT"
+            echo "shas=${SHAS_JSON}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create or fast-forward incoming branch
+        run: |
+          if git ls-remote --heads origin incoming | grep -q 'refs/heads/incoming'; then
+            git checkout -b incoming origin/incoming
+          else
+            git checkout -b incoming upstream/main
+          fi
+          # Reset to upstream/main tip (force-sync, no local commits on this branch)
+          git reset --hard upstream/main
+          # Intentional --force: incoming is a pure mirror of upstream/main and must never
+          # diverge from it. --force-with-lease would still allow data loss here because we
+          # just hard-reset, so we use --force to make the intent explicit.
+          git push origin incoming --force
+
+  dispatch-analysis:
+    needs: sync
+    if: needs.sync.outputs.has_new == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 2
+      matrix:
+        sha: ${{ fromJson(needs.sync.outputs.new_commit_shas) }}
+
+    steps:
+      - name: Dispatch commit analysis workflow
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'analyze-upstream-commit.yml',
+              ref: 'main',
+              inputs: {
+                upstream_commit_sha: '${{ matrix.sha }}'
+              }
+            });
+            // Brief pause to stay within rate limits
+            await new Promise(r => setTimeout(r, 2000));
