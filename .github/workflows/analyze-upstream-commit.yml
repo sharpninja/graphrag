@@ -1,0 +1,355 @@
+name: Analyze Upstream Commit
+
+on:
+  workflow_dispatch:
+    inputs:
+      upstream_commit_sha:
+        description: 'Upstream commit SHA to analyze (from microsoft/graphrag main)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  analyze-and-pr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch upstream commit
+        run: |
+          git remote add upstream https://github.com/microsoft/graphrag.git
+          git fetch upstream main --no-tags
+
+      - name: Extract commit information
+        id: commit-info
+        run: |
+          SHA="${{ inputs.upstream_commit_sha }}"
+          SHORT="${SHA:0:8}"
+
+          git show "$SHA" --format="%s%n%b" --no-patch \
+            > /tmp/commit_message.txt 2>/dev/null \
+            || echo "Commit ${SHORT}" > /tmp/commit_message.txt
+
+          git show "$SHA" --stat --no-patch \
+            > /tmp/commit_stat.txt 2>/dev/null \
+            || echo "(stat unavailable)" > /tmp/commit_stat.txt
+
+          # Capture diff for Python and Markdown files only (capped to keep tokens low)
+          git show "$SHA" -- '*.py' '*.md' \
+            | head -c 8000 > /tmp/commit_diff.txt 2>/dev/null \
+            || echo "(diff unavailable)" > /tmp/commit_diff.txt
+
+          echo "sha=${SHA}"      >> "$GITHUB_OUTPUT"
+          echo "short=${SHORT}"  >> "$GITHUB_OUTPUT"
+          echo "branch=sync/upstream-${SHORT}" >> "$GITHUB_OUTPUT"
+
+      - name: Check whether sync branch already exists
+        id: branch-check
+        run: |
+          BRANCH="${{ steps.commit-info.outputs.branch }}"
+          if git ls-remote --heads origin "$BRANCH" | grep -q "$BRANCH"; then
+            echo "exists=true"  >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Analyze commit with AI and generate PR content
+        if: steps.branch-check.outputs.exists == 'false'
+        id: analysis
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 << 'PYEOF'
+          import json
+          import os
+          import textwrap
+          import urllib.request
+
+          sha   = "${{ inputs.upstream_commit_sha }}"
+          short = sha[:8]
+
+          def read_capped(path, max_bytes=3000):
+              try:
+                  with open(path) as fh:
+                      return fh.read(max_bytes)
+              except Exception as read_exc:
+                  print(f"Warning: could not read {path}: {read_exc}")
+                  return ""
+
+          commit_msg = read_capped("/tmp/commit_message.txt", 800)
+          stat       = read_capped("/tmp/commit_stat.txt",    2000)
+          diff       = read_capped("/tmp/commit_diff.txt",    4000)
+
+          prompt = textwrap.dedent(f"""
+              You are analyzing an upstream commit from the microsoft/graphrag Python repository.
+              This fork (sharpninja/graphrag) adds a .NET/C# implementation in `dotnet/` and
+              extended documentation that mirrors the Python library behavior.
+
+              Upstream commit: {short}
+
+              Commit message:
+              {commit_msg}
+
+              Changed files (stat):
+              {stat}
+
+              Diff preview (Python/Markdown files only):
+              {diff}
+
+              Analyze what changes are required in the fork's `dotnet/` and `docs/` directories
+              to keep the .NET implementation and documentation synchronized with this upstream change.
+
+              Reply with EXACTLY this format (keep all section headers):
+
+              ## Summary
+              <one-paragraph description of what this upstream commit does>
+
+              ## .NET Changes Required
+              <bullet list of specific changes needed in dotnet/, or "None required" if not applicable>
+
+              ## Documentation Changes Required
+              <bullet list of documentation changes needed, or "None required" if not applicable>
+
+              ## Priority
+              HIGH | MEDIUM | LOW — with one-sentence justification
+
+              ## PR Title
+              <concise imperative title, e.g. "sync: update X to match upstream Y behavior">
+
+              ## PR Body
+              <markdown body (2-4 sentences) for the pull request>
+          """).strip()
+
+          token = os.environ["GITHUB_TOKEN"]
+          url   = "https://models.inference.ai.azure.com/chat/completions"
+
+          payload = {
+              "model": "gpt-4o-mini",
+              "messages": [
+                  {
+                      "role": "system",
+                      "content": (
+                          "You are an expert .NET architect helping keep a C# fork "
+                          "in sync with an upstream Python library."
+                      ),
+                  },
+                  {"role": "user", "content": prompt},
+              ],
+              "max_tokens": 1200,
+              "temperature": 0.2,
+          }
+
+          analysis_text = ""
+          pr_title = f"sync: apply upstream changes from commit {short}"
+          pr_body  = (
+              f"Synchronize the `.NET` implementation and documentation with "
+              f"upstream microsoft/graphrag commit `{short}`."
+          )
+
+          try:
+              req = urllib.request.Request(
+                  url,
+                  data=json.dumps(payload).encode(),
+                  headers={
+                      "Content-Type": "application/json",
+                      "Authorization": f"Bearer {token}",
+                  },
+              )
+              with urllib.request.urlopen(req, timeout=90) as resp:
+                  status = resp.status
+                  body   = resp.read()
+              if status != 200:
+                  raise RuntimeError(f"GitHub Models API returned HTTP {status}: {body[:200]}")
+              data = json.loads(body)
+              analysis_text = data["choices"][0]["message"]["content"]
+
+              # Extract PR Title
+              if "## PR Title" in analysis_text:
+                  after = analysis_text.split("## PR Title", 1)[1].strip()
+                  title_candidate = after.splitlines()[0].lstrip("#").strip()
+                  if title_candidate:
+                      pr_title = title_candidate[:120]
+
+              # Extract PR Body
+              if "## PR Body" in analysis_text:
+                  body_part = analysis_text.split("## PR Body", 1)[1].strip()
+                  if "##" in body_part:
+                      body_part = body_part.split("##")[0].strip()
+                  if body_part:
+                      pr_body = body_part[:2000]
+
+          except Exception as exc:
+              analysis_text = (
+                  f"Analysis unavailable: {exc}\n\n"
+                  f"Manual review of upstream commit `{short}` is required."
+              )
+
+          with open("/tmp/analysis.md",  "w") as fh:
+              fh.write(analysis_text)
+          with open("/tmp/pr_title.txt", "w") as fh:
+              fh.write(pr_title)
+          with open("/tmp/pr_body.txt",  "w") as fh:
+              fh.write(pr_body)
+
+          print("Analysis complete.")
+          PYEOF
+
+      - name: Create sync branch and commit analysis document
+        if: steps.branch-check.outputs.exists == 'false'
+        run: |
+          SHORT="${{ steps.commit-info.outputs.short }}"
+          BRANCH="${{ steps.commit-info.outputs.branch }}"
+
+          git checkout -b "$BRANCH"
+          mkdir -p docs/upstream-sync
+
+          ANALYSIS_FILE="docs/upstream-sync/upstream-${SHORT}.md"
+
+          {
+            echo "# Upstream Sync Analysis: \`${SHORT}\`"
+            echo ""
+            echo "**Upstream Commit:** \`${{ inputs.upstream_commit_sha }}\`  "
+            echo "**Upstream Repository:** [microsoft/graphrag](https://github.com/microsoft/graphrag/commit/${{ inputs.upstream_commit_sha }})  "
+            echo "**Analyzed:** $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo ""
+            echo "---"
+            echo ""
+            cat /tmp/analysis.md
+          } > "$ANALYSIS_FILE"
+
+          git add "$ANALYSIS_FILE"
+          git commit -m "docs: upstream sync analysis for commit ${SHORT}"
+          git push origin "$BRANCH"
+
+      - name: Create pull request
+        if: steps.branch-check.outputs.exists == 'false'
+        id: create-pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const sha   = '${{ inputs.upstream_commit_sha }}';
+            const short = sha.substring(0, 8);
+            const branch = '${{ steps.commit-info.outputs.branch }}';
+
+            const prTitle = fs.readFileSync('/tmp/pr_title.txt', 'utf8').trim()
+              || `sync: apply upstream changes from commit ${short}`;
+            const prBodyFromAI = fs.readFileSync('/tmp/pr_body.txt', 'utf8').trim();
+            const analysis     = fs.readFileSync('/tmp/analysis.md',  'utf8');
+
+            const prBody = [
+              `## Upstream Sync: [\`${short}\`](https://github.com/microsoft/graphrag/commit/${sha})`,
+              '',
+              prBodyFromAI,
+              '',
+              '---',
+              '',
+              '## Agent Analysis',
+              '',
+              analysis.substring(0, 5000),
+              '',
+              '---',
+              '*Automatically created by the [Analyze Upstream Commit](../../actions/workflows/analyze-upstream-commit.yml) workflow.*',
+            ].join('\n');
+
+            // Ensure the upstream-sync label exists
+            try {
+              await github.rest.issues.getLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: 'upstream-sync',
+              });
+            } catch {
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: 'upstream-sync',
+                color: '0e8a16',
+                description: 'Tracks upstream synchronization changes from microsoft/graphrag',
+              });
+            }
+
+            const pr = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: prTitle,
+              body:  prBody,
+              head:  branch,
+              base:  'main',
+              draft: false,
+            });
+
+            core.setOutput('pr_number', pr.data.number.toString());
+            core.setOutput('pr_node_id', pr.data.node_id);
+            console.log(`Created PR #${pr.data.number}: ${pr.data.html_url}`);
+
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.data.number,
+              labels: ['upstream-sync'],
+            }).catch(e => console.log('Label warning:', e.status, e.message));
+
+      - name: Enable auto-merge on pull request
+        if: steps.branch-check.outputs.exists == 'false' && steps.create-pr.outputs.pr_number != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = parseInt('${{ steps.create-pr.outputs.pr_number }}', 10);
+            if (!prNumber) return;
+
+            try {
+              // Prefer GraphQL enablePullRequestAutoMerge so the PR merges automatically
+              // once all required status checks pass and there are no conflicts.
+              const { data: pr } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo:  context.repo.repo,
+                pull_number: prNumber,
+              });
+
+              await github.graphql(`
+                mutation EnableAutoMerge($pullRequestId: ID!) {
+                  enablePullRequestAutoMerge(input: {
+                    pullRequestId: $pullRequestId
+                    mergeMethod: SQUASH
+                  }) {
+                    pullRequest { autoMergeRequest { enabledAt } }
+                  }
+                }
+              `, { pullRequestId: pr.node_id });
+
+              console.log(`Auto-merge enabled for PR #${prNumber}`);
+            } catch (autoMergeErr) {
+              console.log('Auto-merge not available — falling back to direct merge:', autoMergeErr.message);
+
+              // If auto-merge is not supported (e.g. no branch-protection rules),
+              // attempt a direct merge. This succeeds only when there are no conflicts.
+              try {
+                await github.rest.pulls.merge({
+                  owner: context.repo.owner,
+                  repo:  context.repo.repo,
+                  pull_number: prNumber,
+                  merge_method: 'squash',
+                });
+                console.log(`PR #${prNumber} merged directly.`);
+              } catch (mergeErr) {
+                console.log(
+                  `Direct merge skipped (conflicts or required checks pending): ${mergeErr.message}`
+                );
+              }
+            }
