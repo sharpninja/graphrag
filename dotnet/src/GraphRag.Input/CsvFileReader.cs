@@ -1,16 +1,14 @@
 // Copyright (c) 2025 Microsoft Corporation.
 // Licensed under the MIT License
 
-using System.Globalization;
-
 using GraphRag.Storage;
 
 namespace GraphRag.Input;
 
 /// <summary>
 /// Reads CSV files from storage and produces <see cref="TextDocument"/> instances.
-/// Uses a simple built-in CSV parser. For robust CSV parsing (quoted fields,
-/// escaping, multi-line values), use the GraphRag.Input.CsvHelper strategy library.
+/// Handles quoted fields, escaped double-quotes, and multi-line field values.
+/// For additional CSV parsing features, use the GraphRag.Input.CsvHelper strategy library.
 /// </summary>
 public class CsvFileReader : StructuredFileReader
 {
@@ -47,33 +45,36 @@ public class CsvFileReader : StructuredFileReader
             return null;
         }
 
-        var rows = new List<Dictionary<string, object?>>();
-        using var reader = new StringReader(content);
-
-        // Read header line.
-        var headerLine = await reader.ReadLineAsync(ct).ConfigureAwait(false);
-        if (headerLine is null)
+        var allRows = ParseCsvContent(content);
+        if (allRows.Count == 0)
         {
-            return rows;
+            return [];
         }
 
-        var headers = ParseCsvLine(headerLine);
+        var headers = allRows[0];
+        if (Array.TrueForAll(headers, string.IsNullOrWhiteSpace))
+        {
+            return [];
+        }
 
-        // Read data lines.
-        string? line;
-        while ((line = await reader.ReadLineAsync(ct).ConfigureAwait(false)) is not null)
+        var rows = new List<Dictionary<string, object?>>();
+
+        for (var i = 1; i < allRows.Count; i++)
         {
             ct.ThrowIfCancellationRequested();
-            if (string.IsNullOrWhiteSpace(line))
+
+            var fields = allRows[i];
+
+            // Skip blank rows (a single empty field means an empty line).
+            if (fields.Length == 1 && string.IsNullOrWhiteSpace(fields[0]))
             {
                 continue;
             }
 
-            var fields = ParseCsvLine(line);
             var row = new Dictionary<string, object?>();
-            for (var i = 0; i < headers.Length; i++)
+            for (var j = 0; j < headers.Length; j++)
             {
-                row[headers[i]] = i < fields.Length ? fields[i] : null;
+                row[headers[j]] = j < fields.Length ? fields[j] : null;
             }
 
             rows.Add(row);
@@ -82,20 +83,27 @@ public class CsvFileReader : StructuredFileReader
         return rows;
     }
 
-    private static string[] ParseCsvLine(string line)
+    /// <summary>
+    /// Parses CSV content into rows, correctly handling quoted fields that may contain
+    /// embedded newlines, commas, and escaped double-quotes (<c>""</c>).
+    /// </summary>
+    private static List<string[]> ParseCsvContent(string content)
     {
+        var rows = new List<string[]>();
         var fields = new List<string>();
-        var inQuotes = false;
         var field = new System.Text.StringBuilder();
+        var inQuotes = false;
 
-        for (var i = 0; i < line.Length; i++)
+        for (var i = 0; i < content.Length; i++)
         {
-            var c = line[i];
+            var c = content[i];
+
             if (inQuotes)
             {
                 if (c == '"')
                 {
-                    if (i + 1 < line.Length && line[i + 1] == '"')
+                    // Escaped quote: "" inside a quoted field → single "
+                    if (i + 1 < content.Length && content[i + 1] == '"')
                     {
                         field.Append('"');
                         i++;
@@ -107,6 +115,7 @@ public class CsvFileReader : StructuredFileReader
                 }
                 else
                 {
+                    // Append everything verbatim inside quotes, including \r and \n.
                     field.Append(c);
                 }
             }
@@ -119,13 +128,36 @@ public class CsvFileReader : StructuredFileReader
                 fields.Add(field.ToString());
                 field.Clear();
             }
+            else if (c == '\r' || c == '\n')
+            {
+                // End of row — consume \r\n as a single line ending.
+                fields.Add(field.ToString());
+                field.Clear();
+                rows.Add([.. fields]);
+                fields.Clear();
+
+                if (c == '\r' && i + 1 < content.Length && content[i + 1] == '\n')
+                {
+                    i++;
+                }
+            }
             else
             {
                 field.Append(c);
             }
         }
 
-        fields.Add(field.ToString());
-        return fields.ToArray();
+        // Flush trailing content that is not terminated by a newline.
+        // Only add a row if there is actual non-empty content remaining.
+        if (field.Length > 0 || fields.Count > 0)
+        {
+            fields.Add(field.ToString());
+            if (!fields.TrueForAll(string.IsNullOrEmpty))
+            {
+                rows.Add([.. fields]);
+            }
+        }
+
+        return rows;
     }
 }
