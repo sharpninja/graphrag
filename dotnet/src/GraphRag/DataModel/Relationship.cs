@@ -39,6 +39,11 @@ public sealed record Relationship : Identified
     public IReadOnlyList<string>? TextUnitIds { get; init; }
 
     /// <summary>
+    /// Gets the combined degree of the source and target entities in the graph.
+    /// </summary>
+    public int CombinedDegree { get; init; }
+
+    /// <summary>
     /// Gets the rank of the relationship.
     /// </summary>
     public int? Rank { get; init; } = 1;
@@ -65,6 +70,7 @@ public sealed record Relationship : Identified
             Description = data.TryGetValue("description", out var desc) ? desc?.ToString() : null,
             DescriptionEmbedding = data.TryGetValue("description_embedding", out var descEmb) ? descEmb as IReadOnlyList<float> : null,
             TextUnitIds = data.TryGetValue("text_unit_ids", out var tuIds) ? tuIds as IReadOnlyList<string> : null,
+            CombinedDegree = data.TryGetValue("combined_degree", out var cd) && cd is int c ? c : 0,
             Rank = data.TryGetValue("rank", out var rank) && rank is int r ? r : 1,
             Attributes = data.TryGetValue("attributes", out var attrs) ? attrs as Dictionary<string, object?> : null,
         };

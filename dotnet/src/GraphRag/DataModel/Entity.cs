@@ -39,6 +39,16 @@ public sealed record Entity : Named
     public IReadOnlyList<string>? TextUnitIds { get; init; }
 
     /// <summary>
+    /// Gets the frequency count indicating how many times this entity was extracted.
+    /// </summary>
+    public int Frequency { get; init; }
+
+    /// <summary>
+    /// Gets the degree of the entity in the graph (number of relationships involving this entity).
+    /// </summary>
+    public int Degree { get; init; }
+
+    /// <summary>
     /// Gets the rank of the entity.
     /// </summary>
     public int? Rank { get; init; } = 1;
@@ -66,6 +76,8 @@ public sealed record Entity : Named
             NameEmbedding = data.TryGetValue("name_embedding", out var nameEmb) ? nameEmb as IReadOnlyList<float> : null,
             CommunityIds = data.TryGetValue("community_ids", out var commIds) ? commIds as IReadOnlyList<string> : null,
             TextUnitIds = data.TryGetValue("text_unit_ids", out var tuIds) ? tuIds as IReadOnlyList<string> : null,
+            Frequency = data.TryGetValue("frequency", out var freq) && freq is int f ? f : 0,
+            Degree = data.TryGetValue("degree", out var deg) && deg is int d ? d : 0,
             Rank = data.TryGetValue("rank", out var rank) && rank is int r ? r : 1,
             Attributes = data.TryGetValue("attributes", out var attrs) ? attrs as Dictionary<string, object?> : null,
         };

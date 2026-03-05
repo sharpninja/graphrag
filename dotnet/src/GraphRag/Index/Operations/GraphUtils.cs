@@ -33,6 +33,49 @@ public static class GraphUtils
     }
 
     /// <summary>
+    /// Filters out relationships whose source or target entity does not exist.
+    /// </summary>
+    /// <remarks>
+    /// After LLM graph extraction the model may hallucinate entity names in
+    /// relationships that have no corresponding entity.  This method drops
+    /// those dangling references so downstream processing never encounters
+    /// broken graph edges.
+    /// </remarks>
+    /// <param name="relationships">The relationships to filter.</param>
+    /// <param name="entities">The entities whose titles form the valid set.</param>
+    /// <returns>A new list containing only relationships whose source and target both appear in <paramref name="entities"/>.</returns>
+    public static IReadOnlyList<Relationship> FilterOrphanRelationships(
+        IReadOnlyList<Relationship> relationships,
+        IReadOnlyList<Entity> entities)
+    {
+        if (relationships.Count == 0 || entities.Count == 0)
+        {
+            return [];
+        }
+
+        var entityTitles = new HashSet<string>(StringComparer.Ordinal);
+        for (int i = 0; i < entities.Count; i++)
+        {
+            if (entities[i].Title is { } title)
+            {
+                entityTitles.Add(title);
+            }
+        }
+
+        var result = new List<Relationship>();
+        for (int i = 0; i < relationships.Count; i++)
+        {
+            var rel = relationships[i];
+            if (entityTitles.Contains(rel.Source) && entityTitles.Contains(rel.Target))
+            {
+                result.Add(rel);
+            }
+        }
+
+        return result.AsReadOnly();
+    }
+
+    /// <summary>
     /// Finds connected components in the graph using union-find.
     /// </summary>
     /// <param name="entities">The entities (nodes) in the graph.</param>

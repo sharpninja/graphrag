@@ -2,6 +2,7 @@
 // Licensed under the MIT License
 
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 
 using GraphRag.Callbacks;
 using GraphRag.Config.Models;
@@ -14,6 +15,11 @@ namespace GraphRag.Index.Run;
 /// </summary>
 public static class PipelineRunner
 {
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        WriteIndented = true,
+    };
+
     /// <summary>
     /// Runs all workflows in the given pipeline, yielding a result for each one.
     /// </summary>
@@ -41,6 +47,9 @@ public static class PipelineRunner
         }
 
         var results = new List<object>();
+
+        // Dump initial stats.
+        await DumpStatsAsync(context, ct).ConfigureAwait(false);
 
         foreach (var (name, function) in pipeline.Run())
         {
@@ -100,6 +109,9 @@ public static class PipelineRunner
                     Error: ex);
             }
 
+            // Dump stats after each workflow, matching Python's per-workflow stats persistence.
+            await DumpStatsAsync(context, ct).ConfigureAwait(false);
+
             yield return result;
 
             if (error is not null || stop)
@@ -113,5 +125,34 @@ public static class PipelineRunner
         {
             cb.OnPipelineEnd(results);
         }
+    }
+
+    /// <summary>
+    /// Serializes the current pipeline run statistics to the output storage as <c>stats.json</c>.
+    /// </summary>
+    /// <param name="context">The pipeline run context containing stats and storage.</param>
+    /// <param name="ct">A token to cancel the operation.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    internal static async Task DumpStatsAsync(PipelineRunContext context, CancellationToken ct = default)
+    {
+        var statsObject = new Dictionary<string, object?>
+        {
+            ["total_runtime"] = context.Stats.TotalRuntime,
+            ["num_documents"] = context.Stats.NumDocuments,
+            ["update_documents"] = context.Stats.UpdateDocuments,
+            ["input_load_time"] = context.Stats.InputLoadTime,
+            ["workflows"] = context.Stats.Workflows.ToDictionary(
+                kvp => kvp.Key,
+                kvp => (object?)new Dictionary<string, object?>
+                {
+                    ["overall_time_seconds"] = kvp.Value.OverallTimeSeconds,
+                    ["peak_memory_bytes"] = kvp.Value.PeakMemoryBytes,
+                    ["memory_delta_bytes"] = kvp.Value.MemoryDeltaBytes,
+                }),
+        };
+
+        var json = JsonSerializer.Serialize(statsObject, JsonOptions);
+
+        await context.Storage.SetAsync("stats.json", json, cancellationToken: ct).ConfigureAwait(false);
     }
 }
