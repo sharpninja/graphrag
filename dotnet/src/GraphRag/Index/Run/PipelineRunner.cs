@@ -48,7 +48,8 @@ public static class PipelineRunner
 
         var results = new List<object>();
 
-        // Dump initial stats.
+        // Initial stats dump before workflows start, matching Python behavior.
+        // This creates the stats.json file so monitoring tools can detect pipeline startup.
         await DumpStatsAsync(context, ct).ConfigureAwait(false);
 
         foreach (var (name, function) in pipeline.Run())

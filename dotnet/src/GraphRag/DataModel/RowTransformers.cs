@@ -222,7 +222,7 @@ public static class RowTransformers
             row["text_unit_ids"] = CoerceList(tuIds);
         }
 
-        row["period"] = (row.GetValueOrDefault("period") ?? string.Empty).ToString() ?? string.Empty;
+        row["period"] = row.GetValueOrDefault("period")?.ToString() ?? string.Empty;
         row["size"] = SafeInt(row.GetValueOrDefault("size"), 0);
 
         return row;
