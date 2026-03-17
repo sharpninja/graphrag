@@ -6,6 +6,14 @@
 
 ---
 
-Analysis unavailable: HTTP Error 401: Unauthorized
+Manual review complete.
 
-Manual review of upstream commit `ae2508d3` is required.
+## Summary
+
+Upstream commit `ae2508d3` is a release-only change (`Release v3.0.6`) containing:
+
+- semversioner release metadata updates
+- Python package version bumps
+- lockfile and changelog refresh
+
+No GraphRAG Python runtime logic changed in this commit, so there are no corresponding dotnet parity updates required.
