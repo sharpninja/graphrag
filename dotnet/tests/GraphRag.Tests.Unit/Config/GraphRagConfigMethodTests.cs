@@ -6,6 +6,8 @@ using GraphRag.Config.Defaults;
 using GraphRag.Config.Errors;
 using GraphRag.Config.Models;
 using GraphRag.Llm.Config;
+using GraphRag.Llm.Types;
+using GraphRag.Vectors;
 
 namespace GraphRag.Tests.Unit.Config;
 
@@ -132,5 +134,58 @@ public class GraphRagConfigMethodTests
         var config = new GraphRagConfig { Workflows = workflows };
 
         config.Workflows.Should().BeEquivalentTo(workflows);
+    }
+
+    [Fact]
+    public void SyncVectorStoreDimensions_UpdatesVectorStoreAndSchema_ForConfiguredEmbeddingModel()
+    {
+        var config = new GraphRagConfig
+        {
+            EmbedText = new EmbedTextConfig { EmbeddingModelId = "embed-model" },
+            VectorStore = new VectorStoreConfig
+            {
+                Type = "azure_ai_search",
+                VectorSize = 3072,
+                IndexSchema = new IndexSchema { IndexName = "entities", VectorSize = 3072 },
+            },
+        };
+        var response = new LlmEmbeddingResponse([[1.0f, 2.0f, 3.0f]]);
+
+        var result = config.SyncVectorStoreDimensions("embed-model", response);
+
+        result.Should().NotBeSameAs(config);
+        result.VectorStore.VectorSize.Should().Be(3);
+        result.VectorStore.IndexSchema.Should().NotBeNull();
+        result.VectorStore.IndexSchema!.VectorSize.Should().Be(3);
+        config.VectorStore.VectorSize.Should().Be(3072);
+        config.VectorStore.IndexSchema!.VectorSize.Should().Be(3072);
+    }
+
+    [Fact]
+    public void SyncVectorStoreDimensions_ReturnsSameConfig_WhenEmbeddingModelDoesNotMatch()
+    {
+        var config = new GraphRagConfig
+        {
+            EmbedText = new EmbedTextConfig { EmbeddingModelId = "embed-model" },
+        };
+        var response = new LlmEmbeddingResponse([[1.0f, 2.0f, 3.0f]]);
+
+        var result = config.SyncVectorStoreDimensions("different-model", response);
+
+        result.Should().BeSameAs(config);
+    }
+
+    [Fact]
+    public void SyncVectorStoreDimensions_ReturnsSameConfig_WhenResponseIsEmpty()
+    {
+        var config = new GraphRagConfig
+        {
+            EmbedText = new EmbedTextConfig { EmbeddingModelId = "embed-model" },
+        };
+        var response = new LlmEmbeddingResponse([]);
+
+        var result = config.SyncVectorStoreDimensions("embed-model", response);
+
+        result.Should().BeSameAs(config);
     }
 }

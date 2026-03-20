@@ -6,6 +6,7 @@ using GraphRag.Config.Defaults;
 using GraphRag.Config.Enums;
 using GraphRag.Input;
 using GraphRag.Llm.Config;
+using GraphRag.Llm.Types;
 using GraphRag.Storage;
 using GraphRag.Storage.Tables;
 using GraphRag.Vectors;
@@ -130,5 +131,36 @@ public sealed record GraphRagConfig
         }
 
         throw new KeyNotFoundException($"Embedding model '{key}' not found in configuration.");
+    }
+
+    /// <summary>
+    /// Returns a copy of the configuration with vector store dimensions synchronized to an embedding response.
+    /// </summary>
+    /// <param name="embeddingModelId">The embedding model that produced the response.</param>
+    /// <param name="response">The embedding response to inspect.</param>
+    /// <returns>
+    /// The current configuration when the response is empty, already aligned, or produced by a different embedding model;
+    /// otherwise a copy with the vector store dimensions updated to match the response.
+    /// </returns>
+    public GraphRagConfig SyncVectorStoreDimensions(string embeddingModelId, LlmEmbeddingResponse response)
+    {
+        ArgumentNullException.ThrowIfNull(embeddingModelId);
+        ArgumentNullException.ThrowIfNull(response);
+
+        if (!string.Equals(embeddingModelId, EmbedText.EmbeddingModelId, StringComparison.Ordinal))
+        {
+            return this;
+        }
+
+        var detectedVectorSize = response.FirstEmbedding.Count;
+        if (detectedVectorSize == 0 || detectedVectorSize == VectorStore.VectorSize)
+        {
+            return this;
+        }
+
+        return this with
+        {
+            VectorStore = VectorStore.WithVectorSize(detectedVectorSize),
+        };
     }
 }

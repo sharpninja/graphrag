@@ -21,4 +21,16 @@ public class IndexSchemaTests
         schema.VectorSize.Should().Be(3072);
         schema.Fields.Should().BeNull();
     }
+
+    [Fact]
+    public void WithVectorSize_ReturnsUpdatedCopy()
+    {
+        var schema = new IndexSchema { IndexName = "test", VectorSize = 3072 };
+
+        var updated = schema.WithVectorSize(1536);
+
+        updated.Should().NotBeSameAs(schema);
+        updated.VectorSize.Should().Be(1536);
+        schema.VectorSize.Should().Be(3072);
+    }
 }
