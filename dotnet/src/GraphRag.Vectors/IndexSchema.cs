@@ -32,4 +32,16 @@ public sealed record IndexSchema
     /// Gets the mapping of field names to their types.
     /// </summary>
     public Dictionary<string, string>? Fields { get; init; }
+
+    /// <summary>
+    /// Returns a copy of the schema with the specified vector size.
+    /// </summary>
+    /// <param name="vectorSize">The vector dimension to apply.</param>
+    /// <returns>A copy of the schema with the updated vector size.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="vectorSize"/> is less than or equal to zero.</exception>
+    public IndexSchema WithVectorSize(int vectorSize)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(vectorSize);
+        return this with { VectorSize = vectorSize };
+    }
 }

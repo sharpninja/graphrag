@@ -52,4 +52,21 @@ public sealed record VectorStoreConfig
     /// Gets the index schema configuration.
     /// </summary>
     public IndexSchema? IndexSchema { get; init; }
+
+    /// <summary>
+    /// Returns a copy of the vector store configuration with the specified vector size.
+    /// </summary>
+    /// <param name="vectorSize">The vector dimension to apply.</param>
+    /// <returns>A copy of the vector store configuration with the updated vector size.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="vectorSize"/> is less than or equal to zero.</exception>
+    public VectorStoreConfig WithVectorSize(int vectorSize)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(vectorSize);
+
+        return this with
+        {
+            VectorSize = vectorSize,
+            IndexSchema = IndexSchema?.WithVectorSize(vectorSize),
+        };
+    }
 }
