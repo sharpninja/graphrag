@@ -75,19 +75,44 @@ jobs:
           npm install -g azurite
           azurite --silent --skipApiVersionCheck --location /tmp/azurite --debug /tmp/azurite-debug.log &
 
-      - name: Benchmark Python implementation
+      - name: Select benchmark mode
+        shell: bash
         run: |
+          if [[ -n "${GRAPHRAG_API_KEY}" && -n "${GRAPHRAG_API_BASE}" && -n "${AZURE_AI_SEARCH_URL_ENDPOINT}" && -n "${AZURE_AI_SEARCH_API_KEY}" ]]; then
+            echo "BENCHMARK_DRY_RUN=false" >> "$GITHUB_ENV"
+            echo "Running full benchmark comparison." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "BENCHMARK_DRY_RUN=true" >> "$GITHUB_ENV"
+            echo "Benchmark secrets are unavailable; running benchmark comparison in dry-run mode." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Benchmark Python implementation
+        shell: bash
+        run: |
+          benchmark_args=()
+          if [[ "${BENCHMARK_DRY_RUN}" == "true" ]]; then
+            benchmark_args+=(--dry-run)
+          fi
+
           uv run python scripts/benchmark_smoke.py run \
             --implementation python \
             --repo-root "${{ github.workspace }}" \
-            --output benchmark-python.json
+            --output benchmark-python.json \
+            "${benchmark_args[@]}"
 
       - name: Benchmark .NET implementation
+        shell: bash
         run: |
+          benchmark_args=()
+          if [[ "${BENCHMARK_DRY_RUN}" == "true" ]]; then
+            benchmark_args+=(--dry-run)
+          fi
+
           uv run python scripts/benchmark_smoke.py run \
             --implementation dotnet \
             --repo-root "${{ github.workspace }}" \
-            --output benchmark-dotnet.json
+            --output benchmark-dotnet.json \
+            "${benchmark_args[@]}"
 
       - name: Generate comparison report
         run: |
