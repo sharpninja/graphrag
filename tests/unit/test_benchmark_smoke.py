@@ -12,8 +12,9 @@ def load_module():
     repo_root = Path(__file__).resolve().parents[2]
     script_path = repo_root / "scripts" / "benchmark_smoke.py"
     spec = importlib.util.spec_from_file_location("benchmark_smoke", script_path)
-    module = importlib.util.module_from_spec(spec)
+    assert spec is not None
     assert spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
@@ -29,6 +30,19 @@ def test_load_fixture_cases_uses_smoke_configs():
     assert fixtures[0].queries[0].method == "local"
     assert fixtures[1].queries[-1].method == "basic"
     assert "community_reports.csv" in fixtures[1].expected_artifacts
+
+
+def test_load_fixture_cases_skips_non_mapping_workflow_entries():
+    module = load_module()
+    repo_root = Path(__file__).resolve().parents[2]
+
+    fixture = module.load_fixture_cases(repo_root, ["azure"])[0]
+
+    assert fixture.name == "azure"
+    assert fixture.expected_artifacts == ()
+    assert fixture.uses_azure_input is True
+    assert fixture.azure_input_container == "azurefixture"
+    assert fixture.azure_input_base_dir == "input"
 
 
 def test_render_markdown_report_includes_missing_output_notes():

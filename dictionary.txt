@@ -50,6 +50,17 @@ INTJ
 rels
 
 # Libraries
+Blazor
+blazor
+csvhelper
+MVVM
+pytest
+Quik
+quikgraph
+Scriban
+scriban
+slnx
+xunit
 Langchain
 networkx
 graspologic
@@ -112,6 +123,7 @@ acompletion
 aembedding
 
 # HTML
+oninput
 nbsp
 onclick
 pymdownx
@@ -166,6 +178,10 @@ codebases
 # Microsoft
 MSRC
 
+# .NET
+Hsts
+notin
+
 # Prompt Inputs
 ABILA
 Abila
@@ -211,6 +227,10 @@ unspooled
 unnavigated
 
 # Names
+Cratchit
+CRATCHIT
+EBENEZER
+Ebenezer
 Hochul
 Ashish
 
@@ -218,3 +238,10 @@ Ashish
 apos
 dearmor
 venv
+
+# Misc
+Compl
+hrid
+Mosaik
+SZFPT
+Bekso
