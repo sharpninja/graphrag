@@ -374,6 +374,11 @@ def summarize_results(results: list[OperationResult]) -> dict[str, int]:
     return summary
 
 
+def has_dry_run_results(*result_groups: list[OperationResult]) -> bool:
+    """Return whether any result group contains dry-run benchmark results."""
+    return any(result.status == "dry_run" for results in result_groups for result in results)
+
+
 def render_markdown_report(
     python_results: list[OperationResult],
     dotnet_results: list[OperationResult],
@@ -397,6 +402,18 @@ def render_markdown_report(
             f"| {implementation} | {summary.get('passed', 0)} | "
             f"{summary.get('failed', 0)} | {summary.get('missing_outputs', 0)} | "
             f"{summary.get('dry_run', 0)} |"
+        )
+
+    if has_dry_run_results(python_results, dotnet_results):
+        lines.extend(
+            [
+                "",
+                "> [!IMPORTANT]",
+                "> This comparison used `--dry-run`, so it validated commands without executing the real benchmark workload.",
+                "> To get a real benchmark run in GitHub Actions, configure these secrets and rerun the `Benchmark Comparison` workflow:",
+                "> `OPENAI_API_KEY`, `GRAPHRAG_API_BASE`, `AZURE_AI_SEARCH_URL_ENDPOINT`, and `AZURE_AI_SEARCH_API_KEY`.",
+                "> You can rerun it manually with **Actions → Benchmark Comparison → Run workflow** after those secrets are available.",
+            ]
         )
 
     lines.extend(
