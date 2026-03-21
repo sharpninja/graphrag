@@ -68,4 +68,3 @@ packages/*/LICENSE
 packages/graphrag-*/example_notebooks/**/output
 packages/graphrag-*/example_notebooks/**/cache
 AGENTS-README-FIRST.yaml
-mcp.db
