@@ -97,6 +97,7 @@ def load_fixture_cases(repo_root: Path, fixture_names: list[str] | None = None) 
         expected_artifacts = tuple(
             artifact
             for workflow in workflow_config.values()
+            if isinstance(workflow, dict)
             for artifact in workflow.get("expected_artifacts", [])
         )
 
