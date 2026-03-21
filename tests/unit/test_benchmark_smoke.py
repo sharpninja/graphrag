@@ -90,6 +90,30 @@ def test_render_markdown_report_includes_missing_output_notes():
     assert "extract_graph_nlp" in report
 
 
+def test_render_markdown_report_explains_how_to_get_real_benchmark_run():
+    module = load_module()
+
+    dry_run_result = module.OperationResult(
+        implementation="python",
+        fixture="text",
+        operation_type="index",
+        operation_label="index:fast",
+        method="fast",
+        query=None,
+        command=["uv", "run", "python", "-m", "graphrag", "index"],
+        duration_seconds=0.0,
+        exit_code=0,
+        status="dry_run",
+        stdout="[dry-run]",
+    )
+
+    report = module.render_markdown_report([dry_run_result], [])
+
+    assert "This comparison used `--dry-run`" in report
+    assert "OPENAI_API_KEY" in report
+    assert "Run workflow" in report
+
+
 def test_python_query_command_uses_cli_shape_from_fixture():
     module = load_module()
     repo_root = Path(__file__).resolve().parents[2]

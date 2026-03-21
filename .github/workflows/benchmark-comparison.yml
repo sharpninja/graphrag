@@ -84,6 +84,8 @@ jobs:
           else
             echo "BENCHMARK_EXTRA_ARG=--dry-run" >> "$GITHUB_ENV"
             echo "Benchmark secrets are unavailable; running benchmark comparison in dry-run mode." >> "$GITHUB_STEP_SUMMARY"
+            echo "To run the real benchmark, add these secrets and rerun the workflow: OPENAI_API_KEY, GRAPHRAG_API_BASE, AZURE_AI_SEARCH_URL_ENDPOINT, AZURE_AI_SEARCH_API_KEY." >> "$GITHUB_STEP_SUMMARY"
+            echo "You can trigger a rerun from Actions → Benchmark Comparison → Run workflow once the secrets are configured." >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Benchmark Python implementation
