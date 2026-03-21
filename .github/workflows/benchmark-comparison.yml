@@ -1,0 +1,106 @@
+name: Benchmark Comparison
+
+on:
+  push:
+    paths:
+      - ".github/workflows/benchmark-comparison.yml"
+      - "dotnet/**"
+      - "packages/**"
+      - "scripts/benchmark_smoke.py"
+      - "tests/fixtures/**"
+      - "tests/unit/test_benchmark_smoke.py"
+      - "pyproject.toml"
+      - "uv.lock"
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+    paths:
+      - ".github/workflows/benchmark-comparison.yml"
+      - "dotnet/**"
+      - "packages/**"
+      - "scripts/benchmark_smoke.py"
+      - "tests/fixtures/**"
+      - "tests/unit/test_benchmark_smoke.py"
+      - "pyproject.toml"
+      - "uv.lock"
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  benchmark:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    env:
+      DEBUG: 1
+      GRAPHRAG_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      GRAPHRAG_API_BASE: ${{ secrets.GRAPHRAG_API_BASE }}
+      AZURE_AI_SEARCH_URL_ENDPOINT: ${{ secrets.AZURE_AI_SEARCH_URL_ENDPOINT }}
+      AZURE_AI_SEARCH_API_KEY: ${{ secrets.AZURE_AI_SEARCH_API_KEY }}
+      BLOB_STORAGE_CONNECTION_STRING: DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1
+      LOCAL_BLOB_STORAGE_CONNECTION_STRING: DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Install dependencies
+        shell: bash
+        run: uv sync --all-packages
+
+      - name: Build .NET
+        run: dotnet build dotnet/ --configuration Release
+
+      - name: Install and start Azurite
+        shell: bash
+        run: |
+          npm install -g azurite
+          azurite --silent --skipApiVersionCheck --location /tmp/azurite --debug /tmp/azurite-debug.log &
+
+      - name: Benchmark Python implementation
+        run: |
+          uv run python scripts/benchmark_smoke.py run \
+            --implementation python \
+            --repo-root "${{ github.workspace }}" \
+            --output benchmark-python.json
+
+      - name: Benchmark .NET implementation
+        run: |
+          uv run python scripts/benchmark_smoke.py run \
+            --implementation dotnet \
+            --repo-root "${{ github.workspace }}" \
+            --output benchmark-dotnet.json
+
+      - name: Generate comparison report
+        run: |
+          uv run python scripts/benchmark_smoke.py compare \
+            --python-results benchmark-python.json \
+            --dotnet-results benchmark-dotnet.json \
+            --output benchmark-comparison.md
+          cat benchmark-comparison.md >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: benchmark-comparison
+          path: |
+            benchmark-python.json
+            benchmark-dotnet.json
+            benchmark-comparison.md
